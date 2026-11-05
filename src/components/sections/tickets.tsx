@@ -6,11 +6,22 @@ import { Minus, Plus } from "lucide-react";
 import { useCart } from "@/components/cart";
 import { Eyes, Orb, Presents } from "@/components/flyer";
 import { Magnetic, Section } from "@/components/ui";
-import { availabilityLabel, event, formatPrice, tickets, type TicketTier } from "@/content/trascendental";
+import {
+  availabilityLabel,
+  event,
+  formatPrice,
+  purchasable,
+  salesEndLabel,
+  serviceFee,
+  tickets as allTiers,
+  type LiveTier,
+} from "@/content/trascendental";
 import { rise, stagger } from "@/lib/motion";
 
-function Status({ tier }: { tier: TicketTier }) {
-  const dot = { available: "bg-ink", low: "bg-[var(--accent)]", soldout: "bg-smoke" }[tier.availability];
+function Status({ tier }: { tier: LiveTier }) {
+  const dot = { available: "bg-ink", low: "bg-[var(--accent)]", soldout: "bg-smoke", upcoming: "bg-smoke", closed: "bg-smoke" }[
+    tier.availability
+  ];
   return (
     <span className="label inline-flex items-center gap-2 text-[10px] text-graphite">
       <span aria-hidden className={`size-1.5 rounded-full ${dot}`} />
@@ -19,7 +30,38 @@ function Status({ tier }: { tier: TicketTier }) {
   );
 }
 
-function Stepper({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+/** Public stock indicator: only a percentage, never exact counts. */
+function SoldMeter({ tier }: { tier: LiveTier }) {
+  if (tier.soldPct == null || !purchasable(tier.availability)) return null;
+  return (
+    <div className="mt-5">
+      <div className="label flex justify-between text-[10px] text-graphite">
+        <span>Vendido</span>
+        <span className="tabular-nums text-ink">{tier.soldPct}%</span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label={`${tier.name} ${tier.phase}: ${tier.soldPct}% vendido`}
+        aria-valuenow={tier.soldPct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        className="mt-2 h-1 bg-rule"
+      >
+        <div className="h-full bg-ink" style={{ width: `${tier.soldPct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function blockedText(tier: LiveTier) {
+  if (tier.availability === "upcoming") {
+    const prev = allTiers.find((t) => t.id === tier.opensAfter);
+    return prev ? `Se abre al agotarse ${prev.phase}` : "Próximamente";
+  }
+  return tier.availability === "closed" ? "Venta cerrada" : "Agotado";
+}
+
+function Stepper({ value, onChange, label, max }: { value: number; onChange: (n: number) => void; label: string; max: number }) {
   return (
     <div className="flex h-11 items-center border border-rule" role="group" aria-label={label}>
       <button
@@ -38,7 +80,7 @@ function Stepper({ value, onChange, label }: { value: number; onChange: (n: numb
         type="button"
         className="inline-flex size-11 items-center justify-center disabled:opacity-30"
         onClick={() => onChange(value + 1)}
-        disabled={value >= 10}
+        disabled={value >= max}
         aria-label="Sumar uno"
       >
         <Plus className="size-3.5" aria-hidden />
@@ -47,14 +89,15 @@ function Stepper({ value, onChange, label }: { value: number; onChange: (n: numb
   );
 }
 
-function TierCard({ tier }: { tier: TicketTier }) {
+function TierCard({ tier }: { tier: LiveTier }) {
   const { add } = useCart();
   const [qty, setQty] = useState(1);
-  const soldout = tier.availability === "soldout";
+  const onSale = purchasable(tier.availability);
+  const done = tier.availability === "soldout" || tier.availability === "closed";
   return (
     <motion.article
       variants={rise}
-      className={`registered flex flex-col border border-rule bg-card/60 p-6 ${soldout ? "opacity-60" : ""}`}
+      className={`registered flex flex-col border border-rule bg-card/60 p-6 ${onSale ? "" : "opacity-60"}`}
       aria-labelledby={`tier-${tier.id}`}
     >
       <div className="flex items-center justify-between">
@@ -64,9 +107,14 @@ function TierCard({ tier }: { tier: TicketTier }) {
       <h3 id={`tier-${tier.id}`} className="display mt-6 text-4xl text-ink">
         {tier.name}
       </h3>
-      <p className={`display mt-3 text-5xl tabular-nums ${soldout ? "text-graphite line-through" : "text-ink"}`}>
+      <p className={`display mt-3 text-5xl tabular-nums ${done ? "text-graphite line-through" : "text-ink"}`}>
         {formatPrice(tier.price)}
       </p>
+      <p className="label mt-2 text-[9px] text-graphite">+ {serviceFee.label.toLowerCase()}</p>
+      {tier.salesEndAt && tier.availability !== "closed" ? (
+        <p className="label mt-3 text-[10px] text-graphite">{salesEndLabel(tier.salesEndAt)}</p>
+      ) : null}
+      <SoldMeter tier={tier} />
       <ul className="mt-6 flex-1 space-y-2 text-sm text-graphite">
         {tier.includes.map((line) => (
           <li key={line} className="flex gap-2">
@@ -76,13 +124,13 @@ function TierCard({ tier }: { tier: TicketTier }) {
         ))}
       </ul>
       <div className="mt-8 flex items-center gap-3">
-        {soldout ? (
-          <span className="label inline-flex min-h-11 flex-1 items-center justify-center border border-rule text-[11px] text-graphite">
-            Agotado
+        {!onSale ? (
+          <span className="label inline-flex min-h-11 flex-1 items-center justify-center border border-rule px-3 text-center text-[11px] text-graphite">
+            {blockedText(tier)}
           </span>
         ) : (
           <>
-            <Stepper value={qty} onChange={setQty} label={`Cantidad de ${tier.name} ${tier.phase}`} />
+            <Stepper value={qty} onChange={setQty} max={10} label={`Cantidad de ${tier.name} ${tier.phase}`} />
             <button
               type="button"
               onClick={() => add({ kind: "ticket", id: tier.id }, qty)}
@@ -98,7 +146,7 @@ function TierCard({ tier }: { tier: TicketTier }) {
 }
 
 /** Signature #3 — the VIP credential as a physical object that leans toward the cursor. */
-function VipPass({ tier }: { tier: TicketTier }) {
+function VipPass({ tier }: { tier: LiveTier }) {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const px = useMotionValue(0);
@@ -171,7 +219,7 @@ function Bullets({ items, align }: { items: string[]; align: "left" | "right" })
   );
 }
 
-function VipBlock({ tier }: { tier: TicketTier }) {
+function VipBlock({ tier }: { tier: LiveTier }) {
   const { add } = useCart();
   const half = Math.ceil(tier.includes.length / 2);
   const left = tier.includes.slice(0, half);
@@ -201,11 +249,17 @@ function VipBlock({ tier }: { tier: TicketTier }) {
           <span className="display text-5xl tabular-nums">{formatPrice(tier.price)}</span>
           <Status tier={tier} />
         </div>
+        <p className="label -mt-2 text-[9px] text-graphite">+ {serviceFee.label.toLowerCase()}</p>
+        {tier.soldPct != null ? (
+          <div className="w-56">
+            <SoldMeter tier={tier} />
+          </div>
+        ) : null}
         <Magnetic>
           <button
             type="button"
             onClick={() => add({ kind: "ticket", id: tier.id })}
-            disabled={tier.availability === "soldout"}
+            disabled={!purchasable(tier.availability)}
             className="label inline-flex min-h-12 items-center justify-center bg-ink px-10 text-[12px] text-paper transition-colors hover:bg-ink/80 disabled:opacity-40"
           >
             Agregar VIP Pass
@@ -216,7 +270,8 @@ function VipBlock({ tier }: { tier: TicketTier }) {
   );
 }
 
-export function Tickets() {
+export function Tickets({ tiers }: { tiers: LiveTier[] }) {
+  const tickets = tiers;
   const standard = tickets.filter((t) => !t.featured);
   const vip = tickets.find((t) => t.featured);
   return (

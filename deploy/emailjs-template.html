@@ -1,0 +1,141 @@
+<!--
+  Plantilla para EmailJS (Email Templates → Create → "Edit Content" → modo Code). Pegar TODO lo de abajo.
+  Configuración de la plantilla:
+    Subject:   {{subject}}
+    To Email:  {{to_email}}
+    From Name: Trascendental IV
+    Reply To:  {{contact_email}}
+  {{{tickets_html}}} va con TRIPLE llave: inserta los boletos (HTML generado en src/lib/server/notify.ts).
+  Máx. 50 KB de variables por envío (20 boletos ≈ 40 KB).
+  Lenguaje del flyer: papel ahumado, tinta negra, Anton / Bodoni / Archivo Expanded con fallbacks
+  (Gmail ignora las web fonts; Apple Mail e iOS sí las cargan). Rojo SOLO en los ojos.
+-->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>{{subject}}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@125,600&family=Bodoni+Moda:opsz,wght@6..96,500&display=swap');
+  @media (max-width:520px){
+    .px{padding-left:20px!important;padding-right:20px!important}
+    .hero{font-size:46px!important}
+    .col{display:block!important;width:100%!important;padding:0 0 14px!important}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#e3e2de">
+<!-- preheader (texto de vista previa en la bandeja) -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#e3e2de">{{preheader}}&#8202;&zwnj;&#8202;&zwnj;&#8202;&zwnj;&#8202;&zwnj;&#8202;&zwnj;&#8202;&zwnj;</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e3e2de">
+<tr><td align="center" style="padding:28px 12px">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#f3f2ee;border:1px solid #cfcdc7">
+
+  <!-- marca de registro superior -->
+  <tr><td class="px" style="padding:18px 32px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="font:600 9px/1 'Archivo',Arial,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#8a8883">Boleto oficial</td>
+      <td align="right" style="font:600 9px/1 'Archivo',Arial,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:#8a8883">{{event_date_label}}</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- encabezado tipo flyer -->
+  <tr><td class="px" align="center" style="padding:34px 32px 0">
+    <p style="margin:0;font:600 11px/1.4 'Archivo',Arial,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#151515">{{presenter}}</p>
+    <h1 class="hero" style="margin:14px 0 0;font:400 60px/.95 'Anton',Impact,'Arial Narrow Bold','Arial Narrow',sans-serif;letter-spacing:.01em;text-transform:uppercase;color:#151515">{{event_title}}</h1>
+  </td></tr>
+
+  <!-- el orbe: anillo fino con los ojos y el numeral -->
+  <tr><td align="center" style="padding:26px 32px 0">
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+      <td align="center" valign="middle" width="132" height="132" style="width:132px;height:132px;border:1px solid #a9a7a1;border-radius:50%">
+        <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
+          <td width="7" height="7" style="width:7px;height:7px;background:#e0141c;border-radius:50%;font-size:0;line-height:0">&nbsp;</td>
+          <td width="9" style="width:9px;font-size:0;line-height:0">&nbsp;</td>
+          <td width="7" height="7" style="width:7px;height:7px;background:#e0141c;border-radius:50%;font-size:0;line-height:0">&nbsp;</td>
+        </tr></table>
+        <p style="margin:10px 0 0;font:500 46px/1 'Bodoni Moda',Didot,'Bodoni 72','Times New Roman',Georgia,serif;color:#151515">{{event_edition}}</p>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <tr><td align="center" style="padding:20px 32px 0">
+    <p style="margin:0;font:500 40px/1 'Bodoni Moda',Didot,'Bodoni 72','Times New Roman',Georgia,serif;letter-spacing:.02em;color:#151515">{{event_date_label}}</p>
+    <p style="margin:10px 0 0;font:600 10px/1.4 'Archivo',Arial,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#151515">{{event_doors}} &nbsp;·&nbsp; {{event_city}}</p>
+  </td></tr>
+
+  <!-- saludo -->
+  <tr><td class="px" style="padding:34px 32px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #151515;padding-top:22px;font:14px/1.65 Inter,Arial,Helvetica,sans-serif;color:#2b2b2b">
+      <p style="margin:0 0 8px;color:#151515;font-weight:600">{{greeting}}</p>
+      <p style="margin:0">{{intro}}</p>
+    </td></tr></table>
+  </td></tr>
+
+  <!-- boletos -->
+  <tr><td class="px" style="padding:26px 32px 4px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{{{tickets_html}}}</table>
+  </td></tr>
+
+  <!-- datos del evento -->
+  <tr><td class="px" style="padding:6px 32px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #151515;border-bottom:1px solid #151515"><tr>
+      <td class="col" width="33%" valign="top" style="padding:16px 12px 16px 0">
+        <p style="margin:0;font:600 9px/1 'Archivo',Arial,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#8a8883">Fecha</p>
+        <p style="margin:8px 0 0;font:13px/1.45 Inter,Arial,sans-serif;color:#151515">{{event_date}}</p>
+      </td>
+      <td class="col" width="33%" valign="top" style="padding:16px 12px">
+        <p style="margin:0;font:600 9px/1 'Archivo',Arial,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#8a8883">Acceso</p>
+        <p style="margin:8px 0 0;font:13px/1.45 Inter,Arial,sans-serif;color:#151515">{{event_doors}}</p>
+      </td>
+      <td class="col" width="34%" valign="top" style="padding:16px 0 16px 12px">
+        <p style="margin:0;font:600 9px/1 'Archivo',Arial,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#8a8883">Lugar</p>
+        <p style="margin:8px 0 0;font:13px/1.45 Inter,Arial,sans-serif;color:#151515">{{event_venue}}<br><span style="color:#5a5a5a">{{event_address}}</span></p>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- instrucciones -->
+  <tr><td class="px" style="padding:22px 32px 0;font:13px/1.65 Inter,Arial,sans-serif;color:#2b2b2b">
+    <p style="margin:0">{{how_to}}</p>
+  </td></tr>
+
+  <!-- CTA negro sólido -->
+  <tr><td class="px" align="center" style="padding:26px 32px 0">
+    <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+      <td style="background:#151515">
+        <a href="{{site_url}}" style="display:inline-block;padding:15px 28px;font:600 11px/1 'Archivo',Arial,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#f3f2ee;text-decoration:none">Ver el evento</a>
+      </td>
+    </tr></table>
+  </td></tr>
+
+  <!-- escalera de opacidad: I → IV -->
+  <tr><td align="center" style="padding:38px 32px 0">
+    <p style="margin:0;font:500 22px/1 'Bodoni Moda',Didot,'Bodoni 72','Times New Roman',Georgia,serif;letter-spacing:.5em;color:#151515">
+      <span style="color:#d3d1cb">I</span> <span style="color:#b4b2ac">II</span> <span style="color:#7f7d78">III</span> <span style="color:#151515">IV</span>
+    </p>
+  </td></tr>
+
+  <!-- pie / microprint -->
+  <tr><td class="px" style="padding:26px 32px 30px">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #cfcdc7;padding-top:16px">
+      <p style="margin:0;font:9px/1.6 Inter,Arial,sans-serif;color:#8a8883">{{microprint}}</p>
+      <p style="margin:12px 0 0;font:600 9px/1.6 'Archivo',Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#151515">
+        <a href="mailto:{{contact_email}}" style="color:#151515;text-decoration:none">{{contact_email}}</a>
+        &nbsp;·&nbsp;
+        <a href="{{instagram_url}}" style="color:#151515;text-decoration:none">{{instagram}}</a>
+      </p>
+    </td></tr></table>
+  </td></tr>
+
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>

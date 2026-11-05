@@ -36,16 +36,16 @@ export const event = {
   edition: "IV",
   dateLabel: "26.12.26", // VERIFIED (flyer)
   dateLong: "Sábado 26 de diciembre de 2026",
-  /** ISO with offset. Hour TODO — 21:00 hora de Chihuahua (UTC−6) asumida. */
-  startsAt: "2026-12-26T21:00:00-06:00",
+  /** ISO with offset. Apertura de puertas, 19:00 hora de Chihuahua (UTC−6). Lo usan el countdown y el schema.org. */
+  startsAt: "2026-12-26T19:00:00-06:00",
   endsAt: "2026-12-27T05:00:00-06:00", // TODO
-  doorsLabel: "Puertas 21:00", // TODO
+  doorsLabel: "Puertas 19:00", // VERIFIED (organizador)
   tagline: "Trascender más allá de lo auditivo.", // VERIFIED (press kit)
   intro:
     "La cuarta edición del viaje electrónico de Héctor Chaparro: álbum original, line-up curado y una producción pensada para conectar, elevar y mover a la pista.",
   venue: {
-    name: "Venue por anunciar", // TODO
-    city: "Chihuahua", // TODO — ciudad base del EPK, sin confirmar para IV
+    name: "Pistoleros House of Shows", // VERIFIED (arte del boleto, assets/boletos)
+    city: "Chihuahua", // VERIFIED (arte del boleto)
     region: "Chihuahua",
     country: "MX",
     address: "Dirección por anunciar", // TODO
@@ -54,51 +54,87 @@ export const event = {
   minAge: 18, // TODO — confirmar política
 };
 
-export type Availability = "available" | "low" | "soldout";
+/**
+ * available / low — se puede comprar · soldout — cupo agotado (o cerrada a mano)
+ * upcoming — la fase anterior aún no se agota · closed — terminó su ventana de venta
+ */
+export type Availability = "available" | "low" | "soldout" | "upcoming" | "closed";
 
 export type TicketTier = {
   id: string;
   name: string;
   phase: string;
   price: number;
+  /**
+   * Manual state. "soldout" closes the phase by hand; otherwise the live state is
+   * computed from the database (src/lib/server/inventory.ts).
+   */
   availability: Availability;
+  /** Max tickets sold in this phase (paid + reserved checkouts). null = no cap. Courtesies don't count. */
+  capacity: number | null;
+  /** Sequential phases: this tier only opens once the tier with this id is sold out. */
+  opensAfter?: string;
+  /** ISO with offset. Sales stop at this moment. */
+  salesEndAt?: string;
   includes: string[];
   featured?: boolean;
+  /** Ticket artwork in assets/boletos/ that the QR is stamped onto (email + WhatsApp). */
+  art: "general" | "vip";
 };
 
-/** TODO — nombres, precios, cupos y beneficios son placeholders. */
+/**
+ * A tier merged with live stock. Public pages only get a rounded percentage —
+ * exact counts stay in /admin.
+ */
+export type LiveTier = TicketTier & { soldPct: number | null };
+
+/** Sold percentage at or above which a phase shows "Pocos lugares". */
+export const lowStockPct = 85;
+
+/** General admission sells in order: Early Bird → Fase 1 → Fase 2. VIP sells in parallel. */
 export const tickets: TicketTier[] = [
   {
     id: "early-bird",
     name: "Early Bird",
     phase: "Fase 0",
-    price: 450,
-    availability: "soldout",
-    includes: ["Acceso general", "Precio de preventa"],
+    price: 300,
+    availability: "available",
+    capacity: 100,
+    includes: ["Acceso general", "Precio de preventa", "Limitado a 100 accesos"],
+    art: "general",
   },
   {
     id: "general-1",
     name: "General",
     phase: "Fase 1",
-    price: 600,
-    availability: "low",
+    price: 350,
+    availability: "available",
+    capacity: 386,
+    opensAfter: "early-bird",
     includes: ["Acceso general", "Pista principal"],
+    art: "general",
   },
   {
     id: "general-2",
     name: "General",
     phase: "Fase 2",
-    price: 750,
+    price: 400,
     availability: "available",
-    includes: ["Acceso general", "Pista principal"],
+    capacity: null, // sin límite de boletos, solo por tiempo
+    opensAfter: "general-1",
+    salesEndAt: "2026-12-23T23:59:59-06:00", // 3 días antes del evento
+    includes: ["Acceso general", "Pista principal", "Tiempo limitado"],
+    art: "general",
   },
   {
     id: "vip",
     name: "VIP Pass",
     phase: "Cupo limitado",
-    price: 1500,
+    price: 900,
     availability: "available",
+    capacity: 50,
     featured: true,
+    art: "vip",
     includes: [
       "Acceso preferente sin fila",
       "Zona VIP con vista al booth",
@@ -109,11 +145,33 @@ export const tickets: TicketTier[] = [
   },
 ];
 
+/**
+ * Cargo por servicio = comisión de Stripe trasladada al comprador, para que el organizador reciba
+ * el precio publicado completo. Stripe MX (stripe.com/en-mx/pricing, verificado 11/2026):
+ * 3.6% + MX$3 por cobro con tarjeta nacional, más IVA (16%) sobre la comisión.
+ * Tarjetas internacionales (+0.5%) y conversión de moneda (+2%) NO se cubren: quedan a cargo del organizador.
+ */
+export const serviceFee = {
+  label: "Cargo por servicio",
+  note: "Comisión de procesamiento de pago (Stripe + IVA). El precio del boleto llega íntegro al evento.",
+  percent: 0.036,
+  fixed: 3,
+  tax: 0.16,
+};
+
 export const availabilityLabel: Record<Availability, string> = {
   available: "Disponible",
   low: "Pocos lugares",
   soldout: "Agotado",
+  upcoming: "Próximamente",
+  closed: "Venta cerrada",
 };
+
+export const purchasable = (a: Availability) => a === "available" || a === "low";
+
+/** "Hasta el 23 dic" for time-limited phases. */
+export const salesEndLabel = (iso: string) =>
+  `Hasta el ${new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", timeZone: "America/Chihuahua" }).format(new Date(iso))}`;
 
 export type MerchColor = {
   id: string;
@@ -149,7 +207,7 @@ export const products: Product[] = [
     id: "tee-iv",
     name: "Playera Trascendental IV",
     blurb: "Algodón peinado, corte regular. Estampado frontal IV.",
-    price: 550,
+    price: 499,
     kind: "tee",
     colors: garmentColors,
     sizes: ["S", "M", "L", "XL", "XXL"],
@@ -160,7 +218,7 @@ export const products: Product[] = [
     id: "hoodie-iv",
     name: "Hoodie Trascendental IV",
     blurb: "Felpa pesada, capucha doble. Bordado IV.",
-    price: 1100,
+    price: 800,
     kind: "hoodie",
     colors: garmentColors.slice(0, 2),
     sizes: ["S", "M", "L", "XL"],
@@ -171,7 +229,7 @@ export const products: Product[] = [
     id: "poster-iv",
     name: "Póster oficial IV",
     blurb: "Arte oficial del flyer en impresión giclée.",
-    price: 350,
+    price: 50,
     kind: "print",
     image: "/images/flyer-iv.jpg",
     sizes: ["45×56 cm"],
@@ -222,6 +280,29 @@ export const editions = [
   },
 ] as const;
 
+export type GalleryItem =
+  | { type: "image"; src: string; alt: string; edition: string | null }
+  | { type: "video"; src: string; poster: string; alt: string; edition: string | null };
+
+/**
+ * Carrusel "Galería" de la sección Proyecto. Material del EPK (public/images/historia-*, public/video/hector*),
+ * optimizado en public/media/historial/. Videos: 12 s (desde el seg. 3 del original), con audio AAC, 1280 px.
+ * TODO — asignar `edition` ("I" | "II" | "III") a cada pieza; mientras sea null no se muestra numeral.
+ */
+export const gallery: GalleryItem[] = [
+  { type: "video", src: "/media/historial/video-1.mp4", poster: "/media/historial/video-1.jpg", alt: "Pista llena frente a la cabina con el letrero Trascendental", edition: null },
+  { type: "image", src: "/media/historial/foto-1.jpg", alt: "Pantalla con el nombre de Héctor Chaparro sobre el público", edition: null },
+  { type: "video", src: "/media/historial/video-2.mp4", poster: "/media/historial/video-2.jpg", alt: "Público con las manos arriba bajo luces verdes", edition: null },
+  { type: "image", src: "/media/historial/foto-2.jpg", alt: "Héctor Chaparro en la cabina con luz magenta", edition: null },
+  { type: "video", src: "/media/historial/video-3.mp4", poster: "/media/historial/video-3.jpg", alt: "La pista vista desde atrás de la cabina", edition: null },
+  { type: "image", src: "/media/historial/foto-3.jpg", alt: "Público alrededor de la cabina durante el set", edition: null },
+  { type: "video", src: "/media/historial/video-4.mp4", poster: "/media/historial/video-4.jpg", alt: "Luces moradas y público grabando el set", edition: null },
+  { type: "image", src: "/media/historial/foto-4.jpg", alt: "Héctor Chaparro frente al público con luz violeta", edition: null },
+  { type: "video", src: "/media/historial/video-5.mp4", poster: "/media/historial/video-5.jpg", alt: "Público en contraluz bajo un reflector", edition: null },
+  { type: "image", src: "/media/historial/foto-5.jpg", alt: "Vista desde la cabina hacia una pista llena entre humo", edition: null },
+  { type: "video", src: "/media/historial/video-6.mp4", poster: "/media/historial/video-6.jpg", alt: "Cabina con pantalla de logotipos y público al frente", edition: null },
+];
+
 /** VERIFIED — EPK press kit bio. */
 export const project = {
   title: "El proyecto",
@@ -237,22 +318,120 @@ export const project = {
   ],
 };
 
-export type Artist = { name: string; role: string; confirmed: boolean };
+export type Artist = {
+  /** URL of the detail page: /lineup/{slug} */
+  slug: string;
+  name: string;
+  /** B2B partner. `null` = partner not announced yet (shows "B2B · Por anunciar"). */
+  b2b?: string | null;
+  role: string;
+  billing: "headliner" | "special" | "local";
+  /** Card photo (portrait, ≥ 900 px tall). null → typographic placeholder until the photo arrives. */
+  photo: string | null;
+  /** Extra photos for the detail page. Put them in public/media/lineup/{slug}/. */
+  photos: { src: string; alt: string }[];
+  bio: string[];
+  socials: { label: string; href: string }[];
+};
 
-/** TODO — line-up por anunciar. Héctor Chaparro es el único nombre confirmado. */
+/**
+ * Line-up IV (VERIFIED — organizador + arte del boleto). Orden = orden de la cartelera.
+ * TODO — fotos, semblanzas y redes de los invitados; pareja B2B de Días de Ariel.
+ */
 export const lineup: Artist[] = [
-  { name: "Héctor Chaparro", role: "Headliner · Live album IV", confirmed: true },
-  { name: "Por anunciar", role: "Invitado nacional", confirmed: false },
-  { name: "Por anunciar", role: "Invitado nacional", confirmed: false },
-  { name: "Por anunciar", role: "Invitado especial", confirmed: false },
-  { name: "Por anunciar", role: "Warm-up", confirmed: false },
+  {
+    slug: "hector-chaparro",
+    name: "Héctor Chaparro",
+    role: "Headliner · Creador de Trascendental",
+    billing: "headliner",
+    photo: "/media/historial/foto-2.jpg",
+    photos: [
+      { src: "/media/historial/foto-4.jpg", alt: "Héctor Chaparro frente al público con luz violeta" },
+      { src: "/media/historial/foto-1.jpg", alt: "Pantalla con el nombre de Héctor Chaparro sobre el público" },
+      { src: "/media/historial/foto-5.jpg", alt: "Vista desde la cabina hacia una pista llena entre humo" },
+    ],
+    bio: [
+      "DJ y productor mexicano, creador de Trascendental: un proyecto de música original, eventos y experiencias que fusiona tech house, techno, psytrance e indie dance en un sonido propio, energético e inmersivo.",
+      "Cada edición nace de un álbum original. En IV presenta en vivo el cuarto capítulo del viaje.",
+    ],
+    socials: [
+      { label: "Instagram", href: "https://instagram.com/hectorchaparromusic" },
+      { label: "Spotify", href: "https://open.spotify.com/album/07moGxbi3p6isje1rsD1zD" },
+      { label: "EPK", href: "https://hector-chaparro-epk.vercel.app/" },
+    ],
+  },
+  {
+    slug: "carlos-belcast",
+    name: "Carlos Belcast",
+    role: "Invitado especial",
+    billing: "special",
+    photo: null, // TODO
+    photos: [],
+    bio: [], // TODO
+    socials: [], // TODO
+  },
+  {
+    slug: "pato-shoucair",
+    name: "Pato Shoucair",
+    role: "Invitado especial",
+    billing: "special",
+    photo: null, // TODO
+    photos: [],
+    bio: [], // TODO
+    socials: [], // TODO
+  },
+  {
+    slug: "vela-beats",
+    name: "Vela Beats",
+    role: "Invitado especial",
+    billing: "special",
+    photo: null, // TODO
+    photos: [],
+    bio: [], // TODO
+    socials: [], // TODO
+  },
+  {
+    slug: "loops-roja-b2b-alex-fierro",
+    name: "Loops (Roja)",
+    b2b: "Alex Fierro",
+    role: "Talento local · B2B",
+    billing: "local",
+    photo: null, // TODO
+    photos: [],
+    bio: [], // TODO
+    socials: [], // TODO
+  },
+  {
+    slug: "dias-de-ariel",
+    name: "Días de Ariel",
+    b2b: null, // TODO — pareja B2B por anunciar
+    role: "Talento local · B2B",
+    billing: "local",
+    photo: null, // TODO
+    photos: [],
+    bio: [], // TODO
+    socials: [], // TODO
+  },
 ];
+
+export const lineupCopy = {
+  kicker: "+ DJ Contest", // VERIFIED (arte del boleto)
+  details: "Ver detalles",
+  noBio: "Semblanza próximamente.",
+  noPhoto: "Foto próximamente",
+  tba: "Por anunciar",
+  back: "Volver al line-up",
+};
+
+/** "Loops (Roja) B2B Alex Fierro" — for alt text, marquee and metadata. */
+export const artistName = (a: Artist) =>
+  a.b2b === undefined ? a.name : `${a.name} B2B ${a.b2b ?? lineupCopy.tba}`;
 
 /** TODO — políticas placeholder; validar con legal / venue. */
 export const faq = [
   {
     q: "¿Cómo accedo al evento?",
-    a: "Tras tu compra recibirás un correo con tu ticket digital. Preséntalo en tu celular junto con una identificación oficial en la entrada.",
+    a: "Al confirmarse tu pago recibirás tus boletos con código QR por correo y por WhatsApp (un QR por persona). Preséntalo en tu celular junto con una identificación oficial en la entrada.",
   },
   {
     q: "¿Hay edad mínima?",
@@ -264,13 +443,30 @@ export const faq = [
   },
   {
     q: "¿Dónde es?",
-    a: "La sede se anunciará muy pronto en este sitio y en Instagram. Todos los tickets son válidos para la sede final.",
+    a: `En ${event.venue.name}, ${event.venue.city}, ${event.venue.region}. La dirección exacta y los accesos se publican aquí y en Instagram.`, // TODO — dirección
   },
   {
     q: "¿Cuándo llega mi merch?",
     a: "La merch se envía a domicilio en 5–10 días hábiles. La playera incluida en el VIP Pass se entrega en el evento.",
   },
 ];
+
+/** Copy of the ticket delivery (email + WhatsApp). One QR per ticket. */
+export const delivery = {
+  emailSubject: `Tus boletos · ${event.title} ${event.edition} · ${event.dateLabel}`,
+  emailIntro: "Tu compra está confirmada. Cada código QR es un acceso individual: compártelo solo con quien vaya a usarlo.",
+  emailCourtesyIntro: "Tienes una cortesía para Trascendental IV. Cada código QR es un acceso individual.",
+  /** Inbox preview text (hidden in the body). */
+  emailPreheader: (n: number) =>
+    `${n === 1 ? "Tu boleto" : `Tus ${n} boletos`} para ${event.title} ${event.edition} · ${event.dateLabel}. Presenta el QR en la entrada.`,
+  howTo: `Presenta tu QR en el celular junto con una identificación oficial. Evento +${event.minAge}.`,
+  whatsappGreeting: (name: string | null) =>
+    `${name ? `Hola ${name.split(" ")[0]}, ` : ""}aquí están tus boletos para *${event.title} ${event.edition}* · ${event.dateLong}.`,
+  whatsappCaption: (label: string, code: string, i: number, n: number) =>
+    `*${event.title} ${event.edition}* — ${label}
+Boleto ${i} de ${n} · ${code}
+Presenta este QR con identificación oficial.`,
+};
 
 /** VERIFIED — EPK booking & links. */
 export const contact = {

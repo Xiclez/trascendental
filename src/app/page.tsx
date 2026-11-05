@@ -8,15 +8,19 @@ import { Lineup } from "@/components/sections/lineup";
 import { Merch } from "@/components/sections/merch";
 import { Project } from "@/components/sections/project";
 import { Tickets } from "@/components/sections/tickets";
-import { event, lineup, site, tickets } from "@/content/trascendental";
+import { connection } from "next/server";
+import { event, lineup, purchasable, site, type LiveTier } from "@/content/trascendental";
+import { liveTiers } from "@/lib/server/inventory";
 
 const availability = {
   available: "https://schema.org/InStock",
   low: "https://schema.org/LimitedAvailability",
   soldout: "https://schema.org/SoldOut",
+  closed: "https://schema.org/SoldOut",
+  upcoming: null, // not on sale yet: left out of the offers
 } as const;
 
-const jsonLd = {
+const jsonLd = (tickets: LiveTier[]) => ({
   "@context": "https://schema.org",
   "@type": "MusicEvent",
   name: `${event.title} ${event.edition}`,
@@ -37,9 +41,9 @@ const jsonLd = {
       addressCountry: event.venue.country,
     },
   },
-  performer: lineup.filter((a) => a.confirmed).map((a) => ({ "@type": "MusicGroup", name: a.name })),
+  performer: lineup.flatMap((a) => [a.name, ...(a.b2b ? [a.b2b] : [])]).map((name) => ({ "@type": "MusicGroup", name })),
   organizer: { "@type": "Person", name: "Héctor Chaparro", url: site.epkUrl },
-  offers: tickets.map((t) => ({
+  offers: tickets.filter((t) => availability[t.availability]).map((t) => ({
     "@type": "Offer",
     name: `${t.name} · ${t.phase}`,
     price: t.price,
@@ -47,21 +51,24 @@ const jsonLd = {
     availability: availability[t.availability],
     url: `${site.url}/#tickets`,
   })),
-};
+});
 
-export default function Home() {
-  const from = Math.min(...tickets.filter((t) => t.availability !== "soldout").map((t) => t.price));
+export default async function Home() {
+  await connection(); // stock is live: render per request
+  const tickets = await liveTiers();
+  const open = tickets.filter((t) => purchasable(t.availability));
+  const from = open.length ? Math.min(...open.map((t) => t.price)) : Math.min(...tickets.map((t) => t.price));
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(tickets)).replace(/</g, "\\u003c") }}
       />
       <GLRoot />
       <SiteNav />
       <main className="relative z-10">
         <Hero />
-        <Tickets />
+        <Tickets tiers={tickets} />
         <Merch />
         <Project />
         <Lineup />

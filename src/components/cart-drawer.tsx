@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Minus, Plus, X } from "lucide-react";
 import { MAX_PER_LINE, lineInfo, useCart } from "@/components/cart";
-import { formatPrice } from "@/content/trascendental";
+import { formatPrice, serviceFee } from "@/content/trascendental";
+import { withFee } from "@/lib/fees";
 import { easeRise } from "@/lib/motion";
 
 /** The site's single dialog: cart + Stripe Checkout hand-off. */
@@ -13,6 +14,7 @@ export function CartDrawer() {
   const panel = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
+  const charge = withFee(total);
 
   // Escape, focus trap, focus restore, scroll lock.
   useEffect(() => {
@@ -155,11 +157,25 @@ export function CartDrawer() {
             </div>
 
             <div className="border-t border-rule px-5 py-5">
-              <div className="flex items-baseline justify-between">
+              {lines.length ? (
+                <dl className="mb-3 space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-graphite">Subtotal</dt>
+                    <dd className="tabular-nums text-ink">{formatPrice(total)}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-graphite">{serviceFee.label}</dt>
+                    <dd className="tabular-nums text-ink">{formatPrice(charge.fee)}</dd>
+                  </div>
+                </dl>
+              ) : null}
+              <div className="flex items-baseline justify-between border-t border-rule pt-3">
                 <span className="label text-[11px] text-graphite">Total</span>
-                <span className="display text-3xl tabular-nums">{formatPrice(total)}</span>
+                <span className="display text-3xl tabular-nums">{formatPrice(charge.total)}</span>
               </div>
-              <p className="mt-2 text-xs text-graphite">Pago seguro con Stripe. El envío de merch se calcula al pagar.</p>
+              <p className="mt-2 text-xs text-graphite">
+                {serviceFee.note} Pago seguro con Stripe. El envío de merch se calcula al pagar.
+              </p>
               {status === "error" ? (
                 <p role="alert" className="mt-3 text-sm text-ink">
                   {error}

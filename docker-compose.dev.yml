@@ -1,0 +1,46 @@
+# Entorno LOCAL de pruebas: solo la base de datos (y opcionalmente Stripe CLI).
+# La app corre fuera de Docker con `npm run dev` para tener recarga en caliente.
+#   npm run db:up          → Postgres en 127.0.0.1:5432 (datos persisten en el volumen)
+#   npm run stripe:listen  → reenvía webhooks de Stripe (modo TEST) a localhost:3000
+#   npm run db:reset       → borra la base y empieza de cero
+# Producción usa docker-compose.yml (app + Postgres + Caddy) en el VPS.
+name: trascendental-dev
+
+services:
+  db:
+    image: postgres:17-alpine # misma versión que producción
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: trascendental
+      POSTGRES_USER: trascendental
+      POSTGRES_PASSWORD: dev # solo local; el puerto se publica únicamente en 127.0.0.1
+      TZ: UTC
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trascendental -d trascendental"]
+      interval: 3s
+      retries: 20
+
+  # Webhooks de Stripe hacia tu `npm run dev`. Toma STRIPE_SECRET_KEY de .env.local (debe ser sk_test_).
+  # El whsec_ que imprime al arrancar va en STRIPE_WEBHOOK_SECRET de .env.local.
+  stripe:
+    image: stripe/stripe-cli:latest
+    profiles: ["stripe"]
+    environment:
+      # Sin `:?` a propósito: compose interpola todos los servicios y rompería `db:up`.
+      # scripts/stripe-listen.mjs valida que exista y sea sk_test_.
+      STRIPE_API_KEY: ${STRIPE_SECRET_KEY:-}
+    command:
+      - listen
+      - --forward-to
+      - http://host.docker.internal:3000/api/stripe/webhook
+      - --events
+      - checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.expired
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  pgdata-dev:

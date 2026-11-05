@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
+import { GalleryCarousel } from "@/components/gallery-carousel";
 import { Section } from "@/components/ui";
-import { editions, event, project } from "@/content/trascendental";
-import { rise, stagger, wipe } from "@/lib/motion";
+import { editions, event, gallery, project } from "@/content/trascendental";
+import { inView, rise, stagger, wipe } from "@/lib/motion";
 
 /** Opacity steps of the flyer's ascending figures (I → III; IV is solid). */
 const ASCENT = [0.22, 0.42, 0.66];
@@ -47,8 +48,19 @@ export function Project() {
         </span>
       </motion.div>
 
-      {/* Timeline I–III + IV */}
-      <motion.ol variants={stagger(0.12)} className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Ediciones de Trascendental">
+      {/* Historial — timeline I–III + IV. Reveals on its own trigger: it sits far below the section header. */}
+      <div className="mt-16 flex items-baseline gap-4">
+        <h3 id="historial" className="label scroll-mt-20 text-[11px] text-ink">Historial · Ediciones pasadas</h3>
+        <span className="h-px flex-1 bg-rule" />
+      </div>
+      <motion.ol
+        variants={stagger(0.12)}
+        initial="hidden"
+        whileInView="show"
+        viewport={inView}
+        className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+        aria-labelledby="historial"
+      >
         {editions.map((ed) => (
           <motion.li key={ed.numeral} variants={rise} className="registered group flex flex-col border border-rule bg-card/60">
             <motion.div variants={wipe} className="relative aspect-square overflow-hidden">
@@ -57,7 +69,7 @@ export function Project() {
                 alt={`Arte de Trascendental ${ed.numeral}`}
                 fill
                 sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
-                className="object-cover grayscale transition-[filter] duration-500 group-hover:grayscale-0"
+                className="object-cover"
               />
             </motion.div>
             <div className="flex flex-1 flex-col p-5">
@@ -103,6 +115,15 @@ export function Project() {
           </div>
         </motion.li>
       </motion.ol>
+
+      {/* Galería — fotos y videos de ediciones pasadas */}
+      <div className="mt-20 flex items-baseline gap-4">
+        <h3 id="galeria" className="label scroll-mt-20 text-[11px] text-ink">Galería · Así se vive Trascendental</h3>
+        <span className="h-px flex-1 bg-rule" />
+      </div>
+      <motion.div initial="hidden" whileInView="show" viewport={inView} className="mt-6">
+        <GalleryCarousel items={gallery} label="Fotos y videos de ediciones pasadas de Trascendental" />
+      </motion.div>
     </Section>
   );
 }

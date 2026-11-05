@@ -38,5 +38,9 @@ export const stagger = (delayChildren = 0): Variants => ({
   show: { transition: { staggerChildren: 0.08, delayChildren } },
 });
 
-/** Shared viewport config so every section reveals at the same threshold. */
-export const inView = { once: true, amount: 0.25 } as const;
+/**
+ * Shared viewport config so every section reveals at the same threshold.
+ * Margin-based (not `amount`): a ratio threshold never fires on sections taller
+ * than ~4 viewports (the edition history on mobile stayed blank).
+ */
+export const inView = { once: true, margin: "0px 0px -12% 0px" } as const;
