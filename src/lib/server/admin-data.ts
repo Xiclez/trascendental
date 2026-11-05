@@ -15,7 +15,7 @@ export type AdminOrder = {
   email_error: string | null;
   whatsapp_sent_at: Date | null;
   whatsapp_error: string | null;
-  lines: { kind: string; item_id: string; quantity: number; color: string | null; size: string | null }[];
+  lines: { kind: string; item_id: string; quantity: number; model: string | null; color: string | null; size: string | null }[];
   codes: string[] | null;
 };
 
@@ -26,7 +26,7 @@ export async function listOrders({ q, source, limit = 100 }: { q?: string; sourc
   return sql<AdminOrder[]>`
     select o.id, o.source, o.status, o.customer_name, o.customer_email, o.customer_phone, o.amount_total, o.note,
       o.created_at, o.paid_at, o.email_sent_at, o.email_error, o.whatsapp_sent_at, o.whatsapp_error,
-      coalesce((select json_agg(json_build_object('kind', l.kind, 'item_id', l.item_id, 'quantity', l.quantity, 'color', l.color, 'size', l.size))
+      coalesce((select json_agg(json_build_object('kind', l.kind, 'item_id', l.item_id, 'quantity', l.quantity, 'model', l.model, 'color', l.color, 'size', l.size))
                 from order_lines l where l.order_id = o.id), '[]') as lines,
       (select array_agg(t.code order by t.code) from tickets t where t.order_id = o.id) as codes
     from orders o

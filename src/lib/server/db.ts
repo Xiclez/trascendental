@@ -61,6 +61,8 @@ create table if not exists order_lines (
   color      text,
   size       text
 );
+-- Design id for products with models (merch), e.g. 'portales'.
+alter table order_lines add column if not exists model text;
 create index if not exists order_lines_order_idx on order_lines (order_id);
 create index if not exists order_lines_item_idx on order_lines (kind, item_id);
 

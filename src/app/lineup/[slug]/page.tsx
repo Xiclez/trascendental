@@ -59,6 +59,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             {artist.name}
             <B2B artist={artist} />
           </h1>
+          {artist.genres ? <p className="label mt-4 text-[11px] text-ink">{artist.genres}</p> : null}
           <p className="numeral mt-4 text-2xl text-ink">
             {event.dateLabel} <span className="label align-middle text-[11px] text-graphite">· {event.venue.name}</span>
           </p>
@@ -66,6 +67,17 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
           <div className="mt-8 max-w-prose space-y-4 text-ink/85">
             {artist.bio.length ? artist.bio.map((p) => <p key={p}>{p}</p>) : <p className="text-graphite">{lineupCopy.noBio}</p>}
           </div>
+
+          {artist.highlights?.length ? (
+            <dl className="mt-8 max-w-prose divide-y divide-rule border-y border-rule">
+              {artist.highlights.map((h) => (
+                <div key={h.label} className="py-4">
+                  <dt className="label text-[10px] text-graphite">{h.label}</dt>
+                  <dd className="mt-2 text-sm text-ink/85">{h.text}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
 
           {artist.socials.length ? (
             <ul className="mt-8 flex flex-wrap gap-2">
@@ -94,11 +106,25 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         </div>
       </div>
 
-      {artist.photos.length ? (
-        <section aria-label={`Fotos de ${artistName(artist)}`} className="mt-16">
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {artist.photos.length || artist.videos?.length ? (
+        // Columns keep each piece at its own shape (portrait photos, square and vertical clips).
+        <section aria-label={`Fotos y videos de ${artistName(artist)}`} className="mt-16">
+          <ul className="gap-4 sm:columns-2 lg:columns-3 [&>li]:mb-4 [&>li]:break-inside-avoid">
+            {artist.videos?.map((v) => (
+              <li key={v.src} className="relative overflow-hidden border border-rule bg-ink" style={{ aspectRatio: v.aspect }}>
+                <video
+                  src={v.src}
+                  poster={v.poster}
+                  aria-label={v.alt}
+                  controls
+                  playsInline
+                  preload="none"
+                  className="absolute inset-0 size-full object-cover [&:fullscreen]:object-contain"
+                />
+              </li>
+            ))}
             {artist.photos.map((p) => (
-              <li key={p.src} className="group relative aspect-[4/3] overflow-hidden border border-rule bg-ink">
+              <li key={p.src} className="relative overflow-hidden border border-rule bg-ink" style={{ aspectRatio: p.aspect ?? "4/3" }}>
                 <Image
                   src={p.src}
                   alt={p.alt}

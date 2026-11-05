@@ -20,7 +20,7 @@ import {
  * A "Cargo por servicio" line (src/lib/fees.ts) passes Stripe's fee to the buyer.
  */
 
-type Item = { kind: "ticket" | "product"; id: string; quantity: number; color?: string; size?: string };
+type Item = { kind: "ticket" | "product"; id: string; quantity: number; model?: string; color?: string; size?: string };
 
 const MAX_QTY = 10;
 
@@ -53,12 +53,14 @@ function toLineItem(item: Item): Resolved | string {
 
   const product = products.find((p) => p.id === item.id);
   if (!product || !product.available) return `Producto no disponible: ${item.id}`;
+  const model = product.models ? product.models.find((m) => m.id === item.model) : undefined;
+  if (product.models && !model) return `Elige el modelo de ${product.name}`;
   const color = product.colors ? product.colors.find((c) => c.id === item.color) : undefined;
   if (product.colors && !color) return `Color inválido para ${product.name}`;
   if (product.sizes && product.sizes.length > 1 && !product.sizes.includes(item.size ?? "")) return `Talla inválida para ${product.name}`;
-  const variant = [color?.name, item.size].filter(Boolean).join(" · ");
+  const variant = [model?.name, color?.name, item.size].filter(Boolean).join(" · ");
   return {
-    line: { kind: "product", id: product.id, quantity, unitPrice: product.price, color: color?.id, size: item.size },
+    line: { kind: "product", id: product.id, quantity, unitPrice: product.price, model: model?.id, color: color?.id, size: item.size },
     stripe: {
       quantity,
       price_data: {
@@ -66,7 +68,7 @@ function toLineItem(item: Item): Resolved | string {
         unit_amount: product.price * 100,
         product_data: {
           name: variant ? `${product.name} — ${variant}` : product.name,
-          metadata: { kind: "product", id: product.id, color: color?.id ?? "", size: item.size ?? "" },
+          metadata: { kind: "product", id: product.id, model: model?.id ?? "", color: color?.id ?? "", size: item.size ?? "" },
         },
       },
     },

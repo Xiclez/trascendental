@@ -18,6 +18,7 @@ export type OrderLine = {
   id: string;
   quantity: number;
   unitPrice: number;
+  model?: string;
   color?: string;
   size?: string;
 };
@@ -45,10 +46,11 @@ async function insertLines(tx: TransactionSql, orderId: string, lines: OrderLine
     item_id: l.id,
     quantity: l.quantity,
     unit_price: l.unitPrice,
+    model: l.model ?? null,
     color: l.color ?? null,
     size: l.size ?? null,
   }));
-  await tx`insert into order_lines ${tx(rows, "order_id", "kind", "item_id", "quantity", "unit_price", "color", "size")}`;
+  await tx`insert into order_lines ${tx(rows, "order_id", "kind", "item_id", "quantity", "unit_price", "model", "color", "size")}`;
 }
 
 async function issueTickets(tx: TransactionSql, orderId: string, holder: string | null, courtesy: boolean) {

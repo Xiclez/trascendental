@@ -88,5 +88,7 @@ scripts/generate-tee.mjs       genera el GLB placeholder
   Páginas/acciones del panel llaman `requireAdmin()` (el escáner es redirigido a /scan); /scan y check-in llaman `requireStaff()`.
 - Cargo por servicio: `serviceFee` en content (Stripe MX 3.6% + $3 + IVA) → `feeFor()`; una línea extra en Stripe y
   `orders.service_fee`. Los ingresos del admin son netos (order_lines).
+- Merch: mockups 4:5 en public/media/merch/{producto}/{color}-{front|back}.jpg (`photos` vía `mockups()`), con switch
+  Frente/Espalda y `merchCopy.mockupNote`. El showcase 3D suma las vistas de foto encima del View.
 - Line-up: `lineup` en content (slug, b2b, fotos en public/media/lineup/{slug}/, bio, socials). `photo: null` = placeholder.
 - Código en `src/lib/server/*` es solo de servidor: nunca importarlo desde un client component.

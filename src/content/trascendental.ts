@@ -192,10 +192,57 @@ export type Product = {
   /** "tee" | "hoodie" draw the illustrated garment; anything else uses `image`. */
   kind: "tee" | "hoodie" | "print";
   image?: string;
+  /** Designs to choose from (like colour and size). The first one is the default. */
+  models?: ProductModel[];
   colors?: MerchColor[];
   sizes?: string[];
   details: string[];
   available: boolean;
+};
+
+/** A print on the 3D tee: transparent PNG + where it sits, in tee.glb geometry units (x, y = centre; scale = w, h). */
+export type TeePrint = { src: string; position: [number, number]; scale: [number, number] };
+
+export type ProductModel = {
+  id: string;
+  name: string;
+  blurb: string;
+  /** Mockup photos per colour id: public/media/merch/{folder}/{color}-{front|back}.jpg (4:5). */
+  photos: Record<string, { front: string; back: string }>;
+  /**
+   * Artwork per colour for the 3D showcase: public/media/merch/prints/{id}-{color}-{front|back}.png,
+   * extracted from the mockups. Placement measured on the same mockups (prints are centred: x = 0).
+   */
+  prints: Record<string, { front: TeePrint; back: TeePrint }>;
+};
+
+const mockupPhotos = (folder: string, colors: MerchColor[]) =>
+  Object.fromEntries(
+    colors.map((c) => [c.id, { front: `/media/merch/${folder}/${c.id}-front.jpg`, back: `/media/merch/${folder}/${c.id}-back.jpg` }]),
+  );
+
+type Placement = { front: [y: number, w: number, h: number]; back: [y: number, w: number, h: number] };
+const teePrints = (model: string, placement: Record<string, Placement>) =>
+  Object.fromEntries(
+    Object.entries(placement).map(([color, p]) => [
+      color,
+      Object.fromEntries(
+        (["front", "back"] as const).map((side) => [
+          side,
+          { src: `/media/merch/prints/${model}-${color}-${side}.png`, position: [0, p[side][0]], scale: [p[side][1], p[side][2]] },
+        ]),
+      ) as { front: TeePrint; back: TeePrint },
+    ]),
+  );
+
+export const merchCopy = {
+  model: "Modelo",
+  front: "Frente",
+  back: "Espalda",
+  view3d: "3D",
+  /** Shown under every mockup photo. */
+  mockupNote:
+    "Imagen de referencia generada digitalmente. El tono de la tela y del estampado puede variar ligeramente según la pantalla.",
 };
 
 const garmentColors: MerchColor[] = [
@@ -206,14 +253,37 @@ const garmentColors: MerchColor[] = [
 /** TODO — productos, precios y tallas son placeholders. */
 export const products: Product[] = [
   {
+    // VERIFIED — 2 diseños × 2 colores (References/merch/). TODO — precio, tallas y tela.
     id: "tee-iv",
     name: "Playera Trascendental IV",
-    blurb: "Algodón peinado, corte regular. Estampado frontal IV.",
+    blurb: "Dos diseños, dos colores. Estampado al frente y en la espalda.",
     price: 499,
     kind: "tee",
     colors: garmentColors,
+    models: [
+      {
+        id: "portales", // TODO — nombre oficial del diseño
+        name: "Portales",
+        blurb: "Al frente, TRASCENDENTAL IV. En la espalda, el arte del flyer: el orbe, los portales y los ojos.",
+        photos: mockupPhotos("tee-portales", garmentColors),
+        prints: teePrints("portales", {
+          blanco: { front: [0.451, 0.268, 0.163], back: [0.037, 0.935, 1.24] },
+          negro: { front: [0.447, 0.27, 0.164], back: [0.024, 0.917, 1.249] },
+        }),
+      },
+      {
+        id: "ascension", // TODO — nombre oficial del diseño
+        name: "Ascensión",
+        blurb: "Al frente, TRASCENDENTAL. En la espalda, cinco siluetas que ascienden hacia la luz.",
+        photos: mockupPhotos("tee-ascension", garmentColors),
+        prints: teePrints("ascension", {
+          blanco: { front: [0.506, 0.281, 0.097], back: [0.062, 0.413, 1.48] },
+          negro: { front: [0.5, 0.285, 0.098], back: [0.063, 0.426, 1.438] },
+        }),
+      },
+    ],
     sizes: ["S", "M", "L", "XL", "XXL"],
-    details: ["100% algodón 220 g", "Serigrafía al frente", "Corte regular unisex", "Edición limitada IV"],
+    details: ["Corte oversize unisex", "Estampado al frente y en la espalda", "Edición limitada IV"],
     available: true,
   },
   {
@@ -331,14 +401,20 @@ export type Artist = {
   /** Card photo (portrait, ≥ 900 px tall). null → typographic placeholder until the photo arrives. */
   photo: string | null;
   /** Extra photos for the detail page. Put them in public/media/lineup/{slug}/. */
-  photos: { src: string; alt: string }[];
+  photos: { src: string; alt: string; aspect?: string }[];
+  /** Clips for the detail page (with sound, native controls). `aspect` as CSS, e.g. "3/4". */
+  videos?: { src: string; poster: string; alt: string; aspect: string }[];
+  /** "Tech House / Melodic House" — shown under the name on the detail page. */
+  genres?: string;
+  /** Short facts for the detail page ("Fundador de DUNAR", "Se ha presentado en…"). */
+  highlights?: { label: string; text: string }[];
   bio: string[];
   socials: { label: string; href: string }[];
 };
 
 /**
  * Line-up IV (VERIFIED — organizador + arte del boleto). Orden = orden de la cartelera.
- * TODO — fotos, semblanzas y redes de los invitados; pareja B2B de Días de Ariel.
+ * TODO — fotos, semblanzas y redes de los invitados (diasdeariel ya completo); pareja B2B de diasdeariel.
  */
 export const lineup: Artist[] = [
   {
@@ -404,15 +480,40 @@ export const lineup: Artist[] = [
     socials: [], // TODO
   },
   {
-    slug: "dias-de-ariel",
-    name: "Días de Ariel",
+    // VERIFIED — press kit 2026 (References/artists/diasdeariel/). Nombre oficial en minúsculas, una palabra.
+    slug: "diasdeariel",
+    name: "diasdeariel",
     b2b: null, // TODO — pareja B2B por anunciar
     role: "Talento local · B2B",
     billing: "local",
-    photo: null, // TODO
-    photos: [],
-    bio: [], // TODO
-    socials: [], // TODO
+    genres: "Tech House / Melodic House / Afro House",
+    photo: "/media/lineup/diasdeariel/retrato.jpg",
+    photos: [{ src: "/media/lineup/diasdeariel/retrato-byn.jpg", alt: "Retrato de diasdeariel en blanco y negro", aspect: "2/3" }],
+    videos: [
+      { src: "/media/lineup/diasdeariel/video-1.mp4", poster: "/media/lineup/diasdeariel/video-1.jpg", alt: "diasdeariel en la cabina al aire libre", aspect: "1/1" },
+      { src: "/media/lineup/diasdeariel/video-2.mp4", poster: "/media/lineup/diasdeariel/video-2.jpg", alt: "diasdeariel tocando en DUNAR frente al público", aspect: "3/4" },
+      { src: "/media/lineup/diasdeariel/video-3.mp4", poster: "/media/lineup/diasdeariel/video-3.jpg", alt: "diasdeariel en la cabina con luz baja", aspect: "3/4" },
+    ],
+    bio: [
+      "DJ mexicano de Chihuahua que conecta el groove del Tech House con la energía del Melodic House y el Afro House. Sus sets se construyen con atención al momento, al espacio y a la pista.",
+      "Ha abierto para artistas como WURTZ (Afterlife).",
+    ],
+    highlights: [
+      {
+        label: "Proyecto propio",
+        text: "Fundador de DUNAR, marca de eventos de música electrónica reconocida en Chihuahua, que ha reunido público local y talento nacional en una propuesta centrada en la música y la pista.",
+      },
+      {
+        label: "Presentaciones",
+        text: "Chihuahua (Zulu Cocktail & Lounge, Studio Bar, Epicentro Foro) · Tulum (Radio Tulum, Azulik) · Guadalajara (Fauno Bar, Sauna Disco, Tito Club) · Mazatlán (Bruma, 404) · Nayarit (Nayan Senses).",
+      },
+    ],
+    socials: [
+      { label: "Instagram", href: "https://instagram.com/diasdeariel" },
+      { label: "SoundCloud", href: "https://soundcloud.com/diasdeariel" },
+      { label: "YouTube", href: "https://youtube.com/@diasdeariel" },
+      { label: "DUNAR", href: "https://instagram.com/dunar.music" },
+    ],
   },
 ];
 

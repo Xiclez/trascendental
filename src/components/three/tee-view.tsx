@@ -16,9 +16,24 @@ import {
 } from "@react-three/drei";
 import { useReducedMotion } from "motion/react";
 import * as THREE from "three";
+import type { TeePrint } from "@/content/trascendental";
 import { bindPointer, markReady, pointer } from "./pointer";
 
-type Props = { className?: string; fabric: string; ink: string; model: string; print: string };
+/** Front + back artwork of one design/colour (see `ProductModel.prints` in content). */
+export type TeeDesign = { front: TeePrint; back: TeePrint };
+
+type Props = {
+  className?: string;
+  fabric: string;
+  model: string;
+  /** What the shirt shows now. Changes play the spin choreography, swapping at the apex. */
+  design: TeeDesign;
+  /** Every design the user can pick, preloaded so the swap never waits on the network. */
+  designs: TeeDesign[];
+};
+
+const DECAL_DEPTH = 0.3; // projection box depth; the torso surface is at z ≈ ±0.23
+const sameDesign = (a: TeeDesign, b: TeeDesign) => a.front.src === b.front.src && a.back.src === b.back.src;
 
 const TURNTABLE_SPEED = 0.32; // rad/s — DRIFT
 const DRAG_SPEED = 0.0105; // rad per CSS px
@@ -52,14 +67,18 @@ type Drag = {
   released: number; // seconds since release
 };
 
-function Tee({ fabric, ink, model, print, track }: Omit<Props, "className"> & { track: HTMLElement }) {
+function Tee({ fabric, model, design, designs, track }: Omit<Props, "className"> & { track: HTMLElement }) {
   const reduced = useReducedMotion();
   const gltf = useGLTF(model);
   const geometry = (gltf.nodes.Tee as THREE.Mesh).geometry;
-  const printMap = useTexture(print, (t) => {
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = 8;
+  const urls = useMemo(() => [...new Set(designs.flatMap((d) => [d.front.src, d.back.src]))], [designs]);
+  const textures = useTexture(urls, (loaded) => {
+    for (const t of Array.isArray(loaded) ? loaded : [loaded]) {
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+    }
   });
+  const tex = (src: string) => textures[urls.indexOf(src)];
   const drag = useRef<Drag>({ active: false, id: -1, lastX: 0, lastY: 0, lastT: 0, dx: 0, dy: 0, velY: 0, velX: 0, released: 99 });
 
   // Free drag: pointer handlers on the View's DOM element write into `drag`; useFrame reads it.
@@ -109,17 +128,15 @@ function Tee({ fabric, ink, model, print, track }: Omit<Props, "className"> & { 
   }, [track]);
 
 
-  // Initial colours only — later changes go through the choreography below,
-  // never through React props (that would swap instantly).
-  const [initial] = useState(() => ({ fabric, ink }));
-  const fabricMat = useRef<THREE.MeshPhysicalMaterial>(null);
-  const inkMat = useRef<THREE.MeshStandardMaterial>(null);
+  // What the mesh shows. Prop changes don't land here directly (that would swap instantly):
+  // they go through the choreography below, which commits them at the apex of the spin.
+  const [shown, setShown] = useState(() => ({ fabric, design }));
   const spinY = useRef<THREE.Group>(null); // turntable + horizontal drag
   const spinX = useRef<THREE.Group>(null); // vertical drag
   const tilt = useRef<THREE.Group>(null); // cursor lean
   const angleY = useRef(-0.35);
   const angleX = useRef(0);
-  const swap = useRef<{ t: number; swapped: boolean; fabric: string; ink: string } | null>(null);
+  const swap = useRef<{ t: number; swapped: boolean; fabric: string; design: TeeDesign } | null>(null);
 
   useEffect(bindPointer, []);
   // Suspense has resolved (GLB + print loaded): hand off from the static fallback
@@ -130,18 +147,12 @@ function Tee({ fabric, ink, model, print, track }: Omit<Props, "className"> & { 
   }, []);
 
   useEffect(() => {
-    const f = fabricMat.current;
-    const i = inkMat.current;
-    if (!f || !i) return;
-    if (f.color.getHexString() === new THREE.Color(fabric).getHexString()) return;
-    if (reduced) {
-      f.color.set(fabric);
-      f.sheenColor.set(fabric);
-      i.color.set(ink);
-      return;
-    }
-    swap.current = { t: 0, swapped: false, fabric, ink };
-  }, [fabric, ink, reduced]);
+    if (reduced) return; // no choreography: `current` below follows the props directly
+    const target = swap.current ?? shown;
+    if (target.fabric === fabric && sameDesign(target.design, design)) return;
+    swap.current = { t: 0, swapped: false, fabric, design };
+  }, [fabric, design, reduced, shown]);
+  const current = reduced ? { fabric, design } : shown;
 
   useFrame((_, dtRaw) => {
     const gy = spinY.current;
@@ -185,12 +196,10 @@ function Tee({ fabric, ink, model, print, track }: Omit<Props, "className"> & { 
         extra = Math.PI * easeInCubic(k);
         lift = 0.07 * easeOutCubic(k);
       } else {
-        // 2. material swap at the apex — the shirt is edge-on / back-facing
+        // 2. fabric + artwork swap at the apex — the shirt is edge-on / back-facing
         if (!s.swapped) {
           s.swapped = true;
-          fabricMat.current?.color.set(s.fabric);
-          fabricMat.current?.sheenColor.set(s.fabric);
-          inkMat.current?.color.set(s.ink);
+          setShown({ fabric: s.fabric, design: s.design });
         }
         // 3. settle the second half-turn with back easing (slight overshoot)
         const k = (s.t - APEX) / (1 - APEX);
@@ -222,26 +231,36 @@ function Tee({ fabric, ink, model, print, track }: Omit<Props, "className"> & { 
         <group ref={spinY}>
           <mesh geometry={geometry}>
             <meshPhysicalMaterial
-              ref={fabricMat}
-              color={initial.fabric}
+              color={current.fabric}
               roughness={0.9}
               sheen={0.5}
               sheenRoughness={0.8}
-              sheenColor={initial.fabric}
+              sheenColor={current.fabric}
             />
-            {/* Printed logo: projected onto the chest so it follows the fabric curvature */}
-            <Decal position={[0, 0.14, 0.14]} rotation={[0, 0, 0]} scale={[0.46, 0.29, 0.22]}>
-              <meshStandardMaterial
-                ref={inkMat}
-                map={printMap}
-                color={initial.ink}
-                transparent
-                roughness={0.75}
-                polygonOffset
-                polygonOffsetFactor={-4}
-                depthWrite={false}
-              />
-            </Decal>
+            {/* The real artwork, projected front and back so it follows the fabric curvature.
+                Keyed by image so the decal geometry is rebuilt with the new placement. */}
+            {(["front", "back"] as const).map((side) => {
+              const p = current.design[side];
+              const back = side === "back";
+              return (
+                <Decal
+                  key={`${side}-${p.src}`}
+                  // Seen from behind (rotated π), +x flips: mirror x so the print stays centred where measured.
+                  position={[back ? -p.position[0] : p.position[0], p.position[1], back ? -0.12 : 0.12]}
+                  rotation={[0, back ? Math.PI : 0, 0]}
+                  scale={[p.scale[0], p.scale[1], DECAL_DEPTH]}
+                >
+                  <meshStandardMaterial
+                    map={tex(p.src)}
+                    transparent
+                    roughness={0.75}
+                    polygonOffset
+                    polygonOffsetFactor={-4}
+                    depthWrite={false}
+                  />
+                </Decal>
+              );
+            })}
           </mesh>
         </group>
       </group>

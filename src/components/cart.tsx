@@ -12,6 +12,8 @@ export type CartLine = {
   kind: "ticket" | "product";
   id: string;
   quantity: number;
+  /** Design id for products with `models` (e.g. the tee). */
+  model?: string;
   color?: string;
   size?: string;
 };
@@ -40,8 +42,9 @@ export function lineInfo(line: CartLine) {
   }
   const p = products.find((x) => x.id === line.id);
   if (!p) return null;
+  const model = p.models?.find((m) => m.id === line.model)?.name;
   const color = p.colors?.find((c) => c.id === line.color)?.name;
-  return { name: p.name, price: p.price, meta: [color, line.size].filter(Boolean).join(" · ") };
+  return { name: p.name, price: p.price, meta: [model, color, line.size].filter(Boolean).join(" · ") };
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -70,7 +73,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [lines, hydrated]);
 
   const add = useCallback<CartState["add"]>((line, quantity = 1) => {
-    const key = [line.kind, line.id, line.color, line.size].filter(Boolean).join(":");
+    const key = [line.kind, line.id, line.model, line.color, line.size].filter(Boolean).join(":");
     setLines((prev) => {
       const found = prev.find((l) => l.key === key);
       if (found)

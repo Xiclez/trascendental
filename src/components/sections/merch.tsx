@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { Move3d } from "lucide-react";
@@ -9,7 +9,7 @@ import { Orb, Portals } from "@/components/flyer";
 import { Garment } from "@/components/garment";
 import { TeeGL } from "@/components/three/gl-root";
 import { Magnetic, Section } from "@/components/ui";
-import { formatPrice, products, showcase, type MerchColor, type Product } from "@/content/trascendental";
+import { formatPrice, merchCopy, products, showcase, type MerchColor, type Product, type ProductModel } from "@/content/trascendental";
 import { rise, stagger } from "@/lib/motion";
 
 function ColorPicker({
@@ -88,6 +88,87 @@ function SizePicker({
   );
 }
 
+type View = "front" | "back" | "3d";
+
+/** Segmented Frente / Espalda (/ 3D) switch — native radios, like colour and size. */
+function ViewPicker({ views, value, onChange, name }: { views: View[]; value: View; onChange: (v: View) => void; name: string }) {
+  const text = { front: merchCopy.front, back: merchCopy.back, "3d": merchCopy.view3d };
+  return (
+    <fieldset className="flex">
+      <legend className="sr-only">Vista</legend>
+      {views.map((v) => (
+        <label key={v} className="cursor-pointer">
+          <input type="radio" name={name} value={v} checked={value === v} onChange={() => onChange(v)} className="peer sr-only" />
+          <span className="label -ml-px inline-flex min-h-11 items-center border border-rule bg-paper px-4 text-[10px] text-graphite transition-colors peer-checked:border-ink peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent)]">
+            {text[v]}
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+/** Design picker (Portales / Ascensión) — native radios with text, like the size picker. */
+function ModelPicker({ models, value, onChange, name }: { models: ProductModel[]; value: string; onChange: (id: string) => void; name: string }) {
+  const active = models.find((m) => m.id === value);
+  return (
+    <fieldset>
+      <legend className="label mb-3 text-[10px] text-graphite">
+        {merchCopy.model} · <span className="text-ink">{active?.name}</span>
+      </legend>
+      <div className="flex flex-wrap gap-2">
+        {models.map((m) => (
+          <label key={m.id} className="cursor-pointer">
+            <input type="radio" name={name} value={m.id} checked={value === m.id} onChange={() => onChange(m.id)} className="peer sr-only" />
+            <span className="label inline-flex min-h-11 items-center justify-center border border-rule px-4 text-[11px] text-graphite transition-colors peer-checked:border-ink peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent)]">
+              {m.name}
+            </span>
+          </label>
+        ))}
+      </div>
+      {active ? <p className="mt-3 max-w-sm text-sm text-graphite">{active.blurb}</p> : null}
+    </fieldset>
+  );
+}
+
+/** Mockup photo of one design + colour + side. Both sides are rendered so switching is instant. */
+function MockupPhoto({
+  product,
+  model,
+  color,
+  view,
+  sizes,
+}: {
+  product: Product;
+  model: ProductModel | undefined;
+  color: string;
+  view: "front" | "back";
+  sizes: string;
+}) {
+  const set = model?.photos[color];
+  if (!set || !model) return null;
+  const colorName = product.colors?.find((c) => c.id === color)?.name ?? "";
+  return (
+    <>
+      {(["front", "back"] as const).map((side) => (
+        <Image
+          key={`${model.id}-${color}-${side}`}
+          src={set[side]}
+          alt={`${product.name}, modelo ${model.name}, color ${colorName.toLowerCase()}, ${side === "front" ? "frente" : "espalda"}`}
+          fill
+          sizes={sizes}
+          aria-hidden={side !== view}
+          className={`object-cover ${side === view ? "" : "invisible"}`}
+        />
+      ))}
+    </>
+  );
+}
+
+function MockupNote({ className = "" }: { className?: string }) {
+  return <p className={`text-[11px] leading-snug text-graphite ${className}`}>{merchCopy.mockupNote}</p>;
+}
+
 /** Signature #2 — the 3D tee showcase (one View inside the shared canvas). */
 function Showcase({ product }: { product: Product }) {
   const { add } = useCart();
@@ -96,6 +177,14 @@ function Showcase({ product }: { product: Product }) {
   const [color, setColor] = useState(colors[0]?.id ?? "");
   const [size, setSize] = useState(sizes[1] ?? sizes[0] ?? "");
   const active = colors.find((c) => c.id === color) ?? colors[0];
+  const models = useMemo(() => product.models ?? [], [product.models]);
+  const [modelId, setModelId] = useState(models[0]?.id ?? "");
+  const model = models.find((m) => m.id === modelId);
+  const hasPhotos = Boolean(model?.photos[color]);
+  const [view, setView] = useState<View>("3d");
+  const design = model?.prints[color];
+  // Every design × colour, preloaded by the 3D view so switching never waits on the network.
+  const designs = useMemo(() => models.flatMap((m) => Object.values(m.prints)), [models]);
 
   return (
     <div id="showcase" className="grid items-center gap-10 lg:grid-cols-[1fr_minmax(0,1.35fr)_1fr]">
@@ -115,37 +204,49 @@ function Showcase({ product }: { product: Product }) {
 
       <motion.div variants={rise} className="order-1 lg:order-2">
         <div className="relative mx-auto aspect-[4/5] w-full max-w-[560px]">
-          {/* Static stage (loading / no WebGL): same orb + portals + garment as the 3D scene. */}
+          {/* Static stage (loading / no WebGL): orb + portals + the front mockup of the current pick. */}
           <div aria-hidden data-for="tee" className="gl-fallback absolute inset-0 text-rule">
             <Orb className="absolute left-1/2 top-[46%] w-[92%] -translate-x-1/2 -translate-y-1/2" />
             <Portals className="absolute left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2" gap={150} />
-            {active ? (
+            {hasPhotos ? (
+              <div className="absolute inset-[12%] overflow-hidden bg-white">
+                <MockupPhoto product={product} model={model} color={color} view="front" sizes="(min-width: 1024px) 420px, 76vw" />
+              </div>
+            ) : active ? (
               <Garment kind="tee" fabric={active.fabric} ink={active.ink} print={showcase.print} className="absolute inset-[14%] h-[72%] w-[72%]" />
             ) : null}
           </div>
-          {active ? (
-            <TeeGL
-              className="absolute inset-0"
-              fabric={active.fabric}
-              ink={active.ink}
-              model={showcase.model}
-              print={showcase.print}
-            />
+          {active && design ? (
+            <TeeGL className="absolute inset-0" fabric={active.fabric} model={showcase.model} design={design} designs={designs} />
           ) : null}
-          <p className="label pointer-events-none absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap text-[10px] text-graphite">
-            <Move3d className="size-3.5" aria-hidden /> Arrastra para girar
-          </p>
+          {/* Photo views sit on top of the 3D View (the shared canvas is under the DOM), hiding it. */}
+          {hasPhotos && view !== "3d" ? (
+            <div className="absolute inset-0 overflow-hidden border border-rule bg-white">
+              <MockupPhoto product={product} model={model} color={color} view={view} sizes="(min-width: 1024px) 560px, 100vw" />
+            </div>
+          ) : (
+            <p className="label pointer-events-none absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap text-[10px] text-graphite">
+              <Move3d className="size-3.5" aria-hidden /> Arrastra para girar
+            </p>
+          )}
         </div>
+        {hasPhotos ? (
+          <div className="mx-auto mt-4 flex max-w-[560px] flex-col items-center gap-3">
+            <ViewPicker views={["3d", "front", "back"]} value={view} onChange={setView} name="showcase-view" />
+            {view !== "3d" ? <MockupNote className="text-center" /> : null}
+          </div>
+        ) : null}
       </motion.div>
 
       <motion.div variants={rise} className="order-3 space-y-8">
         <p className="display text-5xl tabular-nums">{formatPrice(product.price)}</p>
+        {models.length ? <ModelPicker models={models} value={modelId} onChange={setModelId} name="showcase-model" /> : null}
         {colors.length ? <ColorPicker colors={colors} value={color} onChange={setColor} name="showcase-color" /> : null}
         {sizes.length ? <SizePicker sizes={sizes} value={size} onChange={setSize} name="showcase-size" /> : null}
         <Magnetic>
           <button
             type="button"
-            onClick={() => add({ kind: "product", id: product.id, color, size })}
+            onClick={() => add({ kind: "product", id: product.id, model: modelId || undefined, color, size })}
             className="label inline-flex min-h-12 items-center justify-center bg-ink px-10 text-[12px] text-paper transition-colors hover:bg-ink/80"
           >
             Agregar al carrito
@@ -163,12 +264,24 @@ function ProductCard({ product }: { product: Product }) {
   const [color, setColor] = useState(colors[0]?.id ?? "");
   const [size, setSize] = useState(sizes[0] ?? "");
   const active = colors.find((c) => c.id === color);
+  const models = product.models ?? [];
+  const [modelId, setModelId] = useState(models[0]?.id ?? "");
+  const model = models.find((m) => m.id === modelId);
+  const hasPhotos = Boolean(model?.photos[color]);
+  const [view, setView] = useState<"front" | "back">("front");
 
   return (
     <motion.article variants={rise} className="registered flex flex-col border border-rule bg-card/60" aria-labelledby={`p-${product.id}`}>
-      <div className="relative aspect-square overflow-hidden border-b border-rule text-rule">
-        <Orb className="absolute left-1/2 top-1/2 w-[88%] -translate-x-1/2 -translate-y-1/2" />
-        {product.kind === "print" && product.image ? (
+      <div className={`relative overflow-hidden border-b border-rule text-rule ${hasPhotos ? "aspect-[4/5] bg-white" : "aspect-square"}`}>
+        {hasPhotos ? null : <Orb className="absolute left-1/2 top-1/2 w-[88%] -translate-x-1/2 -translate-y-1/2" />}
+        {hasPhotos ? (
+          <>
+            <MockupPhoto product={product} model={model} color={color} view={view} sizes="(min-width: 768px) 50vw, 100vw" />
+            <div className="absolute bottom-3 left-3">
+              <ViewPicker views={["front", "back"]} value={view} onChange={(v) => setView(v as "front" | "back")} name={`${product.id}-view`} />
+            </div>
+          </>
+        ) : product.kind === "print" && product.image ? (
           <Image
             src={product.image}
             alt={`${product.name} — arte del flyer`}
@@ -194,6 +307,10 @@ function ProductCard({ product }: { product: Product }) {
           <span className="display text-2xl tabular-nums text-ink">{formatPrice(product.price)}</span>
         </div>
         <p className="-mt-3 text-sm text-graphite">{product.blurb}</p>
+        {hasPhotos ? <MockupNote className="-mt-3" /> : null}
+        {models.length > 1 ? (
+          <ModelPicker models={models} value={modelId} onChange={setModelId} name={`${product.id}-model`} />
+        ) : null}
         {colors.length > 1 ? (
           <ColorPicker colors={colors} value={color} onChange={setColor} name={`${product.id}-color`} />
         ) : null}
@@ -203,7 +320,7 @@ function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           disabled={!product.available}
-          onClick={() => add({ kind: "product", id: product.id, color: color || undefined, size: size || undefined })}
+          onClick={() => add({ kind: "product", id: product.id, model: modelId || undefined, color: color || undefined, size: size || undefined })}
           className="label mt-auto inline-flex min-h-11 items-center justify-center bg-ink text-[11px] text-paper transition-colors hover:bg-ink disabled:opacity-40"
         >
           {product.available ? "Agregar" : "Próximamente"}

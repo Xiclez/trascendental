@@ -21,7 +21,8 @@ function lineName(l: AdminOrder["lines"][number]) {
     return t ? `${t.name} · ${t.phase}` : l.item_id;
   }
   const p = products.find((x) => x.id === l.item_id);
-  return [p?.name ?? l.item_id, l.color, l.size].filter(Boolean).join(" · ");
+  const model = p?.models?.find((m) => m.id === l.model)?.name ?? l.model;
+  return [p?.name ?? l.item_id, model, l.color, l.size].filter(Boolean).join(" · ");
 }
 
 function Delivery({ order, channel }: { order: AdminOrder; channel: "email" | "whatsapp" }) {

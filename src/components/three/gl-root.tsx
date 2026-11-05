@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { TeePrint } from "@/content/trascendental";
 
 const SceneCanvas = dynamic(() => import("./scene-canvas"), { ssr: false });
 const HeroView = dynamic(() => import("./hero-view"), { ssr: false });
@@ -54,12 +55,13 @@ export function HeroGL({ className }: { className?: string }) {
   return webgl ? <HeroView className={className} /> : null;
 }
 
+type TeeDesign = { front: TeePrint; back: TeePrint };
 type TeeGLProps = {
   className?: string;
   fabric: string;
-  ink: string;
   model: string;
-  print: string;
+  design: TeeDesign;
+  designs: TeeDesign[];
 };
 
 /** Tee region. Only fetches three/drei + the GLB when the section approaches the viewport. */

@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Material original de artistas (pesado; las versiones web están en public/media/lineup/)
+References/artists/
