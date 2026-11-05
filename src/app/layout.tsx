@@ -39,19 +39,21 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: { default: title, template: `%s · ${site.name}` },
   description: site.description,
+  alternates: { canonical: "/" },
   openGraph: {
     title,
     description: site.description,
+    url: "/",
     type: "website",
     locale: "es_MX",
     siteName: site.name,
-    images: [{ url: site.ogImage, width: 720, height: 900, alt: "Flyer Trascendental IV · 26.12.26" }],
+    images: [{ url: site.ogImage, width: 1200, height: 630, alt: site.ogImageAlt, type: "image/jpeg" }],
   },
   twitter: {
     card: "summary_large_image",
     title,
     description: site.description,
-    images: [site.ogImage],
+    images: [{ url: site.ogImage, alt: site.ogImageAlt }],
   },
 };
 

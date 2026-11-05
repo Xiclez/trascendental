@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Eyes } from "@/components/flyer";
 import { ArtistPortrait, B2B } from "@/components/sections/lineup";
-import { artistName, event, lineup, lineupCopy } from "@/content/trascendental";
+import { artistName, event, lineup, lineupCopy, site } from "@/content/trascendental";
 
 /** /lineup/[slug] — the "Ver detalles" page of each line-up card: photos, bio and socials. */
 
@@ -16,11 +16,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const artist = lineup.find((a) => a.slug === slug);
   if (!artist) return {};
-  const name = artistName(artist);
+  // Shared links show only confirmed names: "diasdeariel", not "diasdeariel B2B Por anunciar".
+  const name = artist.b2b === null ? artist.name : artistName(artist);
+  const title = `${name} · ${event.title} ${event.edition}`;
+  const description =
+    artist.bio[0] ?? `${name} · ${artist.role} en ${event.title} ${event.edition} · ${event.dateLabel} · ${event.venue.name}.`;
+  // Artist portrait when there is one; otherwise the event card. Explicit twitter too, or it inherits the home page's.
+  const image = artist.photo
+    ? { url: artist.photo, alt: name }
+    : { url: site.ogImage, width: 1200, height: 630, alt: site.ogImageAlt };
+  const url = `/lineup/${artist.slug}`;
   return {
     title: name,
-    description: artist.bio[0] ?? `${name} · ${artist.role} en ${event.title} ${event.edition} · ${event.dateLabel}.`,
-    openGraph: artist.photo ? { images: [{ url: artist.photo }] } : undefined,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: "profile", images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 

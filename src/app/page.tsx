@@ -29,7 +29,7 @@ const jsonLd = (tickets: LiveTier[]) => ({
   endDate: event.endsAt,
   eventStatus: "https://schema.org/EventScheduled",
   eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-  image: [new URL(site.ogImage, site.url).toString()],
+  image: [new URL(site.flyer, site.url).toString(), new URL(site.ogImage, site.url).toString()],
   location: {
     "@type": "Place",
     name: event.venue.name,

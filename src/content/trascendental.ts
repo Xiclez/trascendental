@@ -16,10 +16,20 @@ export const site = {
   name: "Trascendental IV",
   // SITE_URL is read at runtime on the server (QR links, emails, Stripe redirects), so a build
   // without the NEXT_PUBLIC_ build arg can't bake "localhost" into tickets. Used server-side only.
-  url: (process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
+  // Pages prerendered at build (line-up) bake this into their link previews, and the VPS build
+  // doesn't see SITE_URL — so production falls back to the real domain, never to localhost.
+  url: (
+    process.env.SITE_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.NODE_ENV === "production" ? "https://trascendental.hectorchaparro.com" : "http://localhost:3000")
+  ).replace(/\/$/, ""),
   description:
-    "Trascendental IV — Héctor Chaparro presenta la cuarta edición de Trascendental. 26.12.26. Tickets y merch oficial.",
-  ogImage: "/images/flyer-iv.jpg", // VERIFIED — copy of References/Flyer.jpg
+    "Héctor Chaparro presenta la cuarta edición de Trascendental. 26.12.26 · Pistoleros House of Shows, Chihuahua. Boletos y merch oficial.",
+  /** Link previews (WhatsApp, iMessage, X, Facebook): 1200×630, from the ticket artwork. */
+  ogImage: "/images/og-iv.jpg",
+  ogImageAlt: "Trascendental IV — Héctor Chaparro presents",
+  /** Vertical flyer (VERIFIED — copy of References/Flyer.jpg): schema.org and the merch poster. */
+  flyer: "/images/flyer-iv.jpg",
   epkUrl: "https://hector-chaparro-epk.vercel.app/",
 };
 
