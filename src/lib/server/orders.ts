@@ -94,6 +94,20 @@ export async function cancelOrder(orderId: string) {
   await db()`update orders set status = 'canceled' where id = ${orderId} and status = 'pending'`;
 }
 
+/**
+ * Admin "Anular": a paid order (sale or courtesy) stops counting — its tickets are voided
+ * (the scanner rejects them) and its stock is released. Does NOT refund in Stripe.
+ */
+export async function voidPaidOrder(orderId: string) {
+  return db().begin(async (tx) => {
+    const [order] = await tx<{ id: string }[]>`
+      update orders set status = 'canceled' where id = ${orderId} and status = 'paid' returning id`;
+    if (!order) return false;
+    await tx`update tickets set status = 'void' where order_id = ${orderId}`;
+    return true;
+  });
+}
+
 export async function expireSession(sessionId: string) {
   await db()`update orders set status = 'expired' where stripe_session_id = ${sessionId} and status = 'pending'`;
 }

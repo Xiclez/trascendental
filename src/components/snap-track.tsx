@@ -67,8 +67,11 @@ export function useSnapTrack(count: number) {
   return { track, visible, active, go, onKeyDown };
 }
 
+// `relative` matters: it makes the track the containing block of absolutely positioned
+// descendants (e.g. the sr-only text in each card's link). Without it they anchor to an
+// ancestor outside the scroller, escape its clipping and widen the whole page on phones.
 export const trackClass =
-  "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "relative flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 

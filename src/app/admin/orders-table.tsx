@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { resend } from "@/app/admin/actions";
+import { resend, voidOrder } from "@/app/admin/actions";
 import { formatPrice, products, tickets } from "@/content/trascendental";
 import type { AdminOrder } from "@/lib/server/admin-data";
 
@@ -11,7 +11,7 @@ const statusLabel: Record<string, string> = {
   paid: "Pagado",
   pending: "En checkout",
   expired: "Expirado",
-  canceled: "Cancelado",
+  canceled: "Cancelado / anulado",
   refunded: "Reembolsado",
 };
 
@@ -102,7 +102,28 @@ export function OrdersTable({ orders, empty }: { orders: AdminOrder[]; empty: st
                 ) : null}
               </td>
               <td className="whitespace-nowrap p-3 tabular-nums">{formatPrice(o.amount_total / 100)}</td>
-              <td className="whitespace-nowrap p-3">{statusLabel[o.status] ?? o.status}</td>
+              <td className="p-3">
+                <span className="whitespace-nowrap">{statusLabel[o.status] ?? o.status}</span>
+                {o.status === "paid" ? (
+                  // Two steps (no browser dialog): open, read what it does, confirm.
+                  <details className="mt-2 text-xs">
+                    <summary className="label inline-flex min-h-8 cursor-pointer list-none items-center border border-rule px-2 text-[9px] text-graphite hover:border-ink hover:text-ink">
+                      Anular
+                    </summary>
+                    <div className="mt-2 w-56 border border-rule bg-paper p-3">
+                      <p className="text-graphite">
+                        Sus boletos dejan de servir en la entrada y se libera el cupo. No reembolsa en Stripe.
+                      </p>
+                      <form action={voidOrder} className="mt-2">
+                        <input type="hidden" name="order" value={o.id} />
+                        <button type="submit" className="label min-h-8 w-full bg-ink px-2 text-[9px] text-paper hover:bg-ink/80">
+                          Confirmar anulación
+                        </button>
+                      </form>
+                    </div>
+                  </details>
+                ) : null}
+              </td>
               <td className="p-3 text-xs">
                 <Delivery order={o} channel="email" />
               </td>

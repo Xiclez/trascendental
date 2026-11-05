@@ -152,7 +152,6 @@ export const tickets: TicketTier[] = [
       "Zona VIP con vista al booth",
       "Barra exclusiva",
       "Credencial física Trascendental IV",
-      "Playera oficial IV incluida",
     ],
   },
 ];
@@ -560,7 +559,7 @@ export const faq = [
   },
   {
     q: "¿Cuándo llega mi merch?",
-    a: "La merch se envía a domicilio en 5–10 días hábiles. La playera incluida en el VIP Pass se entrega en el evento.",
+    a: "La merch se envía a domicilio en 5–10 días hábiles.",
   },
 ];
 

@@ -16,6 +16,7 @@ const links = [
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
+  const stripeTestMode = /^(sk|rk)_test_/.test(process.env.STRIPE_SECRET_KEY ?? "");
   return (
     <div className="min-h-[100svh]">
       <header className="border-b border-rule bg-paper/90">
@@ -37,6 +38,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </form>
         </div>
       </header>
+      {stripeTestMode ? (
+        <p role="status" className="border-b border-ink bg-ink px-5 py-3 text-center text-sm text-paper sm:px-8">
+          <span aria-hidden className="mr-2 inline-block size-2 rounded-full bg-[var(--color-red)] align-middle" />
+          Stripe está en <strong>modo de prueba</strong>: los pagos NO se cobran. Cambia STRIPE_SECRET_KEY por la clave live en el servidor.
+        </p>
+      ) : null}
       <main className="mx-auto max-w-[1320px] px-5 py-10 sm:px-8">
         {dbConfigured() ? children : <p className="text-graphite">Falta DATABASE_URL: no hay base de datos conectada.</p>}
       </main>

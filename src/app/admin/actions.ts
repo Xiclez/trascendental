@@ -17,7 +17,7 @@ import {
   startSession,
 } from "@/lib/server/admin-auth";
 import { deliverOrder, tierLabel } from "@/lib/server/notify";
-import { checkIn, createCourtesy } from "@/lib/server/orders";
+import { checkIn, createCourtesy, voidPaidOrder } from "@/lib/server/orders";
 import {
   authenticateStaff,
   createStaff,
@@ -99,6 +99,15 @@ export async function resend(fd: FormData) {
   const channel = str(fd, "channel");
   if (!/^[0-9a-f-]{36}$/i.test(orderId)) return;
   await deliverOrder(orderId, { force: true, email: channel !== "whatsapp", whatsapp: channel !== "email" });
+  revalidatePath("/admin", "layout");
+}
+
+/** Voids a paid order: its tickets stop working at the door and its stock is released. */
+export async function voidOrder(fd: FormData) {
+  await requireAdmin();
+  const orderId = str(fd, "order");
+  if (!/^[0-9a-f-]{36}$/i.test(orderId)) return;
+  await voidPaidOrder(orderId);
   revalidatePath("/admin", "layout");
 }
 
