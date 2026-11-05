@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { currency, event, products, serviceFee, tickets } from "@/content/trascendental";
+import { currency, event, products, serviceFee, site, tickets } from "@/content/trascendental";
 import { withFee } from "@/lib/fees";
 import { dbConfigured } from "@/lib/server/db";
 import { SoldOutError } from "@/lib/server/inventory";
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "No se pudo reservar tu compra. Intenta de nuevo." }, { status: 500 });
   }
 
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(request.url).origin;
+  const origin = site.url;
   const hasMerch = items.some((i) => i.kind === "product");
 
   try {

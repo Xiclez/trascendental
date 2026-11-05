@@ -14,7 +14,9 @@ export const currency = "mxn" as const;
 
 export const site = {
   name: "Trascendental IV",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  // SITE_URL is read at runtime on the server (QR links, emails, Stripe redirects), so a build
+  // without the NEXT_PUBLIC_ build arg can't bake "localhost" into tickets. Used server-side only.
+  url: (process.env.SITE_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
   description:
     "Trascendental IV — Héctor Chaparro presenta la cuarta edición de Trascendental. 26.12.26. Tickets y merch oficial.",
   ogImage: "/images/flyer-iv.jpg", // VERIFIED — copy of References/Flyer.jpg
