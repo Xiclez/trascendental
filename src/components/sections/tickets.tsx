@@ -275,7 +275,7 @@ export function Tickets({ tiers }: { tiers: LiveTier[] }) {
   const standard = tickets.filter((t) => !t.featured);
   const vip = tickets.find((t) => t.featured);
   return (
-    <Section id="tickets" index="I" title="Tickets" kicker={`${event.dateLabel} · ${event.venue.city}`}>
+    <Section id="tickets" index="II" title="Tickets" kicker={`${event.dateLabel} · ${event.venue.city}`}>
       <motion.div variants={stagger(0.1)} className="grid gap-4 md:grid-cols-3">
         {standard.map((tier) => (
           <TierCard key={tier.id} tier={tier} />

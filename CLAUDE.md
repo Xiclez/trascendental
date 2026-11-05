@@ -90,5 +90,7 @@ scripts/generate-tee.mjs       genera el GLB placeholder
   `orders.service_fee`. Los ingresos del admin son netos (order_lines).
 - Merch: mockups 4:5 en public/media/merch/{producto}/{color}-{front|back}.jpg (`photos` vía `mockups()`), con switch
   Frente/Espalda y `merchCopy.mockupNote`. El showcase 3D suma las vistas de foto encima del View.
-- Line-up: `lineup` en content (slug, b2b, fotos en public/media/lineup/{slug}/, bio, socials). `photo: null` = placeholder.
+- Line-up: `lineup` en content (slug, fotos en public/media/lineup/{slug}/, bio, socials). `photo: null` = placeholder.
+  B2B = cada artista con su entrada/página y `b2b: "<slug de la pareja>"`; `lineupSlots` los junta en una caja
+  (card · B2B · card). Material fuente de cada artista en References/artists/{slug}/.
 - Código en `src/lib/server/*` es solo de servidor: nunca importarlo desde un client component.

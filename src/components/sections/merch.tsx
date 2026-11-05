@@ -334,7 +334,7 @@ export function Merch() {
   const hero = products.find((p) => p.id === showcase.productId);
   const rest = products.filter((p) => p.id !== showcase.productId);
   return (
-    <Section id="merch" index="II" title="Merch oficial" kicker="Envío a todo México">
+    <Section id="merch" index="III" title="Merch oficial" kicker="Envío a todo México">
       {hero ? <Showcase product={hero} /> : null}
       <motion.div variants={stagger(0.1)} className="mt-24 grid gap-4 md:grid-cols-2">
         {rest.map((p) => (

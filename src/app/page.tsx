@@ -41,7 +41,7 @@ const jsonLd = (tickets: LiveTier[]) => ({
       addressCountry: event.venue.country,
     },
   },
-  performer: lineup.flatMap((a) => [a.name, ...(a.b2b ? [a.b2b] : [])]).map((name) => ({ "@type": "MusicGroup", name })),
+  performer: lineup.map((a) => ({ "@type": "MusicGroup", name: a.name })),
   organizer: { "@type": "Person", name: "Héctor Chaparro", url: site.epkUrl },
   offers: tickets.filter((t) => availability[t.availability]).map((t) => ({
     "@type": "Offer",
@@ -68,10 +68,10 @@ export default async function Home() {
       <SiteNav />
       <main className="relative z-10">
         <Hero />
+        <Lineup />
         <Tickets tiers={tickets} />
         <Merch />
         <Project />
-        <Lineup />
         <Faq />
       </main>
       <div className="relative z-10">

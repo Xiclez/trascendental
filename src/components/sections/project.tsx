@@ -13,7 +13,7 @@ const ASCENT = [0.22, 0.42, 0.66];
 
 export function Project() {
   return (
-    <Section id="proyecto" index="III" title={project.title} kicker="Trascendental I → IV">
+    <Section id="proyecto" index="IV" title={project.title} kicker="Trascendental I → IV">
       <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr]">
         <motion.div variants={rise}>
           <p className="text-[clamp(1.25rem,2.2vw,1.75rem)] leading-snug text-ink">{project.lead}</p>

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Eyes } from "@/components/flyer";
 import { ArtistPortrait, B2B } from "@/components/sections/lineup";
-import { artistName, event, lineup, lineupCopy, site } from "@/content/trascendental";
+import { artistBySlug, event, lineup, lineupCopy, site } from "@/content/trascendental";
 
 /** /lineup/[slug] — the "Ver detalles" page of each line-up card: photos, bio and socials. */
 
@@ -16,11 +16,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const artist = lineup.find((a) => a.slug === slug);
   if (!artist) return {};
-  // Shared links show only confirmed names: "diasdeariel", not "diasdeariel B2B Por anunciar".
-  const name = artist.b2b === null ? artist.name : artistName(artist);
+  const name = artist.name;
+  const partner = artist.b2b ? artistBySlug(artist.b2b) : undefined;
   const title = `${name} · ${event.title} ${event.edition}`;
   const description =
-    artist.bio[0] ?? `${name} · ${artist.role} en ${event.title} ${event.edition} · ${event.dateLabel} · ${event.venue.name}.`;
+    artist.bio[0] ?? `${partner ? `${name} B2B ${partner.name}` : name} · ${artist.role} en ${event.title} ${event.edition} · ${event.dateLabel} · ${event.venue.name}.`;
   // Artist portrait when there is one; otherwise the event card. Explicit twitter too, or it inherits the home page's.
   const image = artist.photo
     ? { url: artist.photo, alt: name }
@@ -119,7 +119,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
       {artist.photos.length || artist.videos?.length ? (
         // Columns keep each piece at its own shape (portrait photos, square and vertical clips).
-        <section aria-label={`Fotos y videos de ${artistName(artist)}`} className="mt-16">
+        <section aria-label={`Fotos y videos de ${artist.name}`} className="mt-16">
           <ul className="gap-4 sm:columns-2 lg:columns-3 [&>li]:mb-4 [&>li]:break-inside-avoid">
             {artist.videos?.map((v) => (
               <li key={v.src} className="relative overflow-hidden border border-rule bg-ink" style={{ aspectRatio: v.aspect }}>
@@ -154,13 +154,13 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
           <span className="label inline-flex items-center gap-2 text-[10px] text-graphite">
             <ArrowLeft className="size-3" aria-hidden /> Anterior
           </span>
-          <span className="display text-xl text-ink group-hover:underline sm:text-2xl">{artistName(prev)}</span>
+          <span className="display text-xl text-ink group-hover:underline sm:text-2xl">{prev.name}</span>
         </Link>
         <Link href={`/lineup/${next.slug}`} className="group flex min-h-20 flex-col items-end justify-center gap-1 py-4 pl-4 text-right">
           <span className="label inline-flex items-center gap-2 text-[10px] text-graphite">
             Siguiente <ArrowRight className="size-3" aria-hidden />
           </span>
-          <span className="display text-xl text-ink group-hover:underline sm:text-2xl">{artistName(next)}</span>
+          <span className="display text-xl text-ink group-hover:underline sm:text-2xl">{next.name}</span>
         </Link>
       </nav>
     </main>

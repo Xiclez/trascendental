@@ -403,8 +403,8 @@ export type Artist = {
   /** URL of the detail page: /lineup/{slug} */
   slug: string;
   name: string;
-  /** B2B partner. `null` = partner not announced yet (shows "B2B · Por anunciar"). */
-  b2b?: string | null;
+  /** Slug of the B2B partner (who has their own entry, next to this one). Both share one box in the line-up. */
+  b2b?: string;
   role: string;
   billing: "headliner" | "special" | "local";
   /** Card photo (portrait, ≥ 900 px tall). null → typographic placeholder until the photo arrives. */
@@ -423,7 +423,8 @@ export type Artist = {
 
 /**
  * Line-up IV (VERIFIED — organizador + arte del boleto). Orden = orden de la cartelera.
- * TODO — fotos, semblanzas y redes de los invitados (diasdeariel ya completo); pareja B2B de diasdeariel.
+ * Cada artista tiene su propia entrada y página; las parejas B2B van juntas y se apuntan con `b2b`.
+ * TODO — fotos, semblanzas y redes de Carlos Belcast, Vela Beats, Loops (Roja) y Alex Fierro.
  */
 export const lineup: Artist[] = [
   {
@@ -431,8 +432,9 @@ export const lineup: Artist[] = [
     name: "Héctor Chaparro",
     role: "Headliner · Creador de Trascendental",
     billing: "headliner",
-    photo: "/media/historial/foto-2.jpg",
+    photo: "/media/lineup/hector-chaparro/hero-artist-1.jpg",
     photos: [
+      { src: "/media/historial/foto-2.jpg", alt: "Héctor Chaparro en la cabina con luz magenta" },
       { src: "/media/historial/foto-4.jpg", alt: "Héctor Chaparro frente al público con luz violeta" },
       { src: "/media/historial/foto-1.jpg", alt: "Pantalla con el nombre de Héctor Chaparro sobre el público" },
       { src: "/media/historial/foto-5.jpg", alt: "Vista desde la cabina hacia una pista llena entre humo" },
@@ -458,14 +460,36 @@ export const lineup: Artist[] = [
     socials: [], // TODO
   },
   {
+    // VERIFIED — press kit 2026 (References/artists/pato-shoucair/). Fotos recortadas del mismo PDF.
     slug: "pato-shoucair",
     name: "Pato Shoucair",
     role: "Invitado especial",
     billing: "special",
-    photo: null, // TODO
-    photos: [],
-    bio: [], // TODO
-    socials: [], // TODO
+    genres: "Electrónica melódica",
+    photo: "/media/lineup/pato-shoucair/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/pato-shoucair/edc-cabina.jpg", alt: "Pato Shoucair en la cabina del XX Stage de EDC México frente al público", aspect: "2/3" },
+      { src: "/media/lineup/pato-shoucair/edc-escenario.jpg", alt: "Escenario XX Stage de EDC México lleno, con pirotecnia", aspect: "4/5" },
+      { src: "/media/lineup/pato-shoucair/retrato-rojo.jpg", alt: "Retrato de Pato Shoucair sobre fondo rojo", aspect: "4/5" },
+    ],
+    bio: [
+      "Artista, DJ y productor mexicano de música electrónica que ha construido un proyecto en el que la emoción es el punto de partida. Su propuesta combina producciones melódicas con DJ sets intensos y envolventes, creando una conexión genuina con el público tanto dentro como fuera de la pista de baile.",
+      "Con más de 125 millones de reproducciones, más de 60 presentaciones y 40 shows sold out, ha llevado su música a escenarios de México, Colombia, Guatemala, España y Países Bajos. Entre los momentos más importantes de su carrera destacan sus presentaciones consecutivas en EDC México 2025 y 2026, donde tocó en el XX Stage a máxima capacidad.",
+    ],
+    highlights: [
+      { label: "En cifras", text: "125M+ reproducciones · 60+ presentaciones en vivo · 40 shows sold out · 467K oyentes mensuales en Spotify · 48M+ visualizaciones en YouTube." },
+      { label: "Presentaciones destacadas", text: "EDC México 2025 y 2026 (XX Stage, aforo completo) · México, Colombia, Guatemala, España y Países Bajos · Confirmado en 2026: Festival Water Castle y Feria de Zacatecas." },
+      { label: "Último álbum", text: "MITOSIS (17.07.26), su proyecto más personal: un álbum bilingüe en dos facetas, La Herida y La Cicatriz, sobre vulnerabilidad, sanación, identidad y transformación. 13.5M+ reproducciones." },
+      { label: "Nuevo capítulo", text: "Pato Shoucair · Belcast: proyecto de ocho canciones de electrónica melódica con Belcast. Lanzamientos: Amants Perdus (ya disponible) y Silence After You (11.09.26)." },
+      { label: "Socios de la industria", text: "Virgin · Sony Music." },
+    ],
+    socials: [
+      { label: "Instagram", href: "https://instagram.com/pato_shoucair" },
+      { label: "Spotify", href: "https://open.spotify.com/artist/5PBJkBd4ipAxK7D36jkJNC" },
+      { label: "SoundCloud", href: "https://soundcloud.com/user-410132279" },
+      { label: "TikTok", href: "https://www.tiktok.com/@patoshoucair" },
+      { label: "Sitio web", href: "https://www.patoshoucair.com" },
+    ],
   },
   {
     slug: "vela-beats",
@@ -478,9 +502,20 @@ export const lineup: Artist[] = [
     socials: [], // TODO
   },
   {
-    slug: "loops-roja-b2b-alex-fierro",
+    slug: "loops-roja",
     name: "Loops (Roja)",
-    b2b: "Alex Fierro",
+    b2b: "alex-fierro",
+    role: "Talento local · B2B",
+    billing: "local",
+    photo: null, // TODO
+    photos: [],
+    bio: [], // TODO
+    socials: [], // TODO
+  },
+  {
+    slug: "alex-fierro",
+    name: "Alex Fierro",
+    b2b: "loops-roja",
     role: "Talento local · B2B",
     billing: "local",
     photo: null, // TODO
@@ -492,7 +527,7 @@ export const lineup: Artist[] = [
     // VERIFIED — press kit 2026 (References/artists/diasdeariel/). Nombre oficial en minúsculas, una palabra.
     slug: "diasdeariel",
     name: "diasdeariel",
-    b2b: null, // TODO — pareja B2B por anunciar
+    b2b: "de-la-reiver",
     role: "Talento local · B2B",
     billing: "local",
     genres: "Tech House / Melodic House / Afro House",
@@ -524,6 +559,39 @@ export const lineup: Artist[] = [
       { label: "DUNAR", href: "https://instagram.com/dunar.music" },
     ],
   },
+  {
+    // VERIFIED — EPK https://delareiver-presskit.vercel.app/ (fotos y video del artista: References/artists/de-la-reiver/).
+    slug: "de-la-reiver",
+    name: "De La Reiver",
+    b2b: "diasdeariel",
+    role: "Talento local · B2B",
+    billing: "local",
+    genres: "Tech House / House",
+    photo: "/media/lineup/de-la-reiver/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/de-la-reiver/graffiti.jpg", alt: "De La Reiver frente a un muro de graffiti", aspect: "3/2" },
+      { src: "/media/lineup/de-la-reiver/kiosco.jpg", alt: "De La Reiver en cuclillas bajo un kiosco iluminado de noche", aspect: "2/3" },
+    ],
+    videos: [
+      { src: "/media/lineup/de-la-reiver/video-1.mp4", poster: "/media/lineup/de-la-reiver/video-1.jpg", alt: "De La Reiver en la cabina de Sensory Groove con luces rojas", aspect: "16/9" },
+    ],
+    bio: [
+      "DJ emergente de la escena electrónica, influenciado por el tech house y la cultura rave. Su estilo destaca por grooves profundos, bajos potentes y una energía envolvente que conecta con la pista.",
+      "Cada set está diseñado como una experiencia fluida, donde la energía evoluciona de manera natural y controlada, manteniendo siempre una identidad sobria y profunda dentro de la pista.",
+    ],
+    highlights: [
+      { label: "Proyecto propio", text: "Creador de Sensory Groove (I y II)." },
+      { label: "Presentaciones", text: "Studio Bar · Epicentro · Zulu · After del After · Beer Garden · Ambar · Mezcalería El Camino · El Cuervo · Roxy · afters, raves y fiestas underground." },
+      {
+        label: "Colaboraciones",
+        text: "Kevin Van Reken, Beto Ramos, Los Grandes, Tota, DaxikleZ, Divixxion, Merry Pop, Fleck, diasdeariel, Jauregui, Zamorano, Jach, Sol MX, Valentin Romero, VPM, Guillermo Nevarez, Andy Quid, Rebel ID, Alex Lozduar, Carlos Duran y Uruk.",
+      },
+    ],
+    socials: [
+      { label: "Instagram", href: "https://www.instagram.com/de_la_reiver/" },
+      { label: "SoundCloud", href: "https://soundcloud.com/suisrap1986" },
+    ],
+  },
 ];
 
 export const lineupCopy = {
@@ -531,13 +599,20 @@ export const lineupCopy = {
   details: "Ver detalles",
   noBio: "Semblanza próximamente.",
   noPhoto: "Foto próximamente",
-  tba: "Por anunciar",
   back: "Volver al line-up",
 };
 
-/** "Loops (Roja) B2B Alex Fierro" — for alt text, marquee and metadata. */
-export const artistName = (a: Artist) =>
-  a.b2b === undefined ? a.name : `${a.name} B2B ${a.b2b ?? lineupCopy.tba}`;
+export const artistBySlug = (slug: string) => lineup.find((a) => a.slug === slug);
+
+/** The line-up as billed: one slot per solo act, one per B2B pair (in the order of the first of the two). */
+export const lineupSlots: Artist[][] = lineup.reduce<Artist[][]>((slots, a) => {
+  if (slots.some((slot) => slot.includes(a))) return slots;
+  const partner = a.b2b ? artistBySlug(a.b2b) : undefined;
+  return [...slots, partner ? [a, partner] : [a]];
+}, []);
+
+/** "Loops (Roja) B2B Alex Fierro" — for the marquee, alt text and metadata. */
+export const slotName = (slot: Artist[]) => slot.map((a) => a.name).join(" B2B ");
 
 /** TODO — políticas placeholder; validar con legal / venue. */
 export const faq = [
@@ -595,10 +670,10 @@ export const socials = [
 ];
 
 export const nav = [
+  { href: "#lineup", label: "Line-up" },
   { href: "#tickets", label: "Tickets" },
   { href: "#merch", label: "Merch" },
   { href: "#proyecto", label: "Proyecto" },
-  { href: "#lineup", label: "Line-up" },
   { href: "#faq", label: "FAQ" },
 ];
 

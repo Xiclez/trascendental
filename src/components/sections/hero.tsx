@@ -169,14 +169,14 @@ export function Hero() {
               href="#tickets"
               className="label inline-flex min-h-12 items-center justify-center bg-ink px-9 text-[12px] text-paper transition-colors hover:bg-ink/80"
             >
-              Comprar tickets
+              Comprar boletos
             </a>
           </Magnetic>
           <a
-            href="#merch"
+            href="#lineup"
             className="label inline-flex min-h-12 items-center justify-center gap-2 border border-ink px-7 text-[12px] text-ink transition-colors hover:bg-ink hover:text-paper"
           >
-            Merch oficial <ArrowDown className="size-3.5" aria-hidden />
+            Ver line-up <ArrowDown className="size-3.5" aria-hidden />
           </a>
         </motion.div>
 
