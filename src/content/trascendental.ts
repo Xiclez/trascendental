@@ -424,7 +424,6 @@ export type Artist = {
 /**
  * Line-up IV (VERIFIED — organizador + arte del boleto). Orden = orden de la cartelera.
  * Cada artista tiene su propia entrada y página; las parejas B2B van juntas y se apuntan con `b2b`.
- * TODO — fotos, semblanzas y redes de Carlos Belcast, Vela Beats, Loops (Roja) y Alex Fierro.
  */
 export const lineup: Artist[] = [
   {
@@ -450,14 +449,38 @@ export const lineup: Artist[] = [
     ],
   },
   {
+    // VERIFIED — media kit (References/artists/carlos-belcast/). Fotos de sus redes: TODO pedir originales y créditos.
+    // TODO — el kit marca por confirmar si "Amants Perdus" / "Mírame" (2026) son de este BELCAST; no se mencionan aquí.
     slug: "carlos-belcast",
     name: "Carlos Belcast",
     role: "Invitado especial",
     billing: "special",
-    photo: null, // TODO
-    photos: [],
-    bio: [], // TODO
-    socials: [], // TODO
+    genres: "Hardstyle / Hyper",
+    photo: "/media/lineup/carlos-belcast/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/carlos-belcast/retrato-naranja.jpg", alt: "Retrato de Carlos Belcast con lentes en la mano sobre fondo naranja", aspect: "1/1" },
+      { src: "/media/lineup/carlos-belcast/gym.jpg", alt: "Carlos Belcast con mancuernas en el gimnasio", aspect: "4/5" },
+    ],
+    bio: [
+      "DJ y productor mexicano detrás de BELCAST, proyecto de hardstyle, hyper y remixes de clásicos pop y EDM con estética de gimnasio. Sus sets llevan la intensidad del entrenamiento a la pista: puro BPM para “tronar vena”.",
+      "Suma más de 37 millones de streams en Spotify y firmó junto a Velabeats “JUST FUCKING DANCE”, el himno detrás de uno de sus trends más virales. Fuera de la cabina es uno de los creadores fitness más influyentes de habla hispana: más de 13 millones de seguidores, atleta oficial de Gymshark y representante de México en La Velada del Año 5.",
+    ],
+    highlights: [
+      { label: "Proyecto musical", text: "BELCAST: hardstyle, hyper y remixes con energía de gimnasio. 37M+ streams en Spotify. Su primer DJ set fue en Miami Lift." },
+      {
+        label: "Lanzamientos",
+        text: "JUST FUCKING DANCE (con Velabeats, track insignia) · I WANNA GO (HARD-STYLE) (remix de Britney Spears, con Velabeats) · EVOLUTION y ROSAS (HYPER) (con Velabeats) · UNHOLY (con dnvn) · Tokyo Drift y STEREO LOVE ULTRA FUNK (con ZODIVK) · LIGHTNING IN THE DARK.",
+      },
+      { label: "Colaboraciones", text: "Velabeats, su productor de cabecera · ZODIVK · dnvn · LAID x BELCAST (con David Laid) · BELCAST x ANDONI." },
+      { label: "Curaduría", text: "Su playlist “BELCAST - GYM PLAYLIST” en Spotify suma 148.9K guardados." },
+      { label: "Fuera de la cabina", text: "13M+ seguidores en TikTok, Instagram y YouTube · Atleta oficial de Gymshark, con colección propia (2026) · La Velada del Año 5 (Sevilla, 2025)." },
+    ],
+    socials: [
+      { label: "Spotify", href: "https://open.spotify.com/artist/4fSRUQ3o9t33hv8MFyGo7Z" },
+      { label: "Instagram", href: "https://instagram.com/carlosbelcast" },
+      { label: "TikTok", href: "https://www.tiktok.com/@carlosbelcast" },
+      { label: "YouTube", href: "https://youtube.com/@carlosbelcast" },
+    ],
   },
   {
     // VERIFIED — press kit 2026 (References/artists/pato-shoucair/). Fotos recortadas del mismo PDF.
@@ -492,14 +515,37 @@ export const lineup: Artist[] = [
     ],
   },
   {
+    // VERIFIED — media kit (References/artists/Velabeats/). Fotos de sus redes: TODO pedir originales y créditos.
+    // TODO — Instagram, ciudad base y fechas en vivo (el kit no las tiene).
     slug: "vela-beats",
     name: "Vela Beats",
     role: "Invitado especial",
     billing: "special",
-    photo: null, // TODO
-    photos: [],
-    bio: [], // TODO
-    socials: [], // TODO
+    genres: "Hardstyle / Hyper / House",
+    photo: "/media/lineup/vela-beats/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/vela-beats/estudio.jpg", alt: "Velabeats produciendo en un teclado MIDI en su estudio", aspect: "4/5" },
+      { src: "/media/lineup/vela-beats/muro.jpg", alt: "Velabeats de pie en la esquina de un muro de ladrillo", aspect: "1/1" },
+    ],
+    bio: [
+      "Velabeats es el proyecto del DJ y productor Adrián Vela Solares, compositor y productor en todos sus créditos. Empezó en el lo-fi con discos en el sello Mellow y hoy produce hardstyle, hyper y house.",
+      "Es el productor detrás de BELCAST, el proyecto musical de Carlos Belcast: juntos firmaron “JUST FUCKING DANCE”, el himno de uno de los trends gym más virales en español. En 2026 abre una etapa house con Pato Shoucair y BELCAST.",
+    ],
+    highlights: [
+      {
+        label: "Trayectoria",
+        text: "Lo-fi (2020–2023): EPs instrumentales en Mellow y un sencillo lo-fi jazz en Kindbrew Records · Hardstyle y hyper con BELCAST (2023–2024) · House (2026), con Pato Shoucair y BELCAST.",
+      },
+      {
+        label: "Lanzamientos",
+        text: "Mírame y Amants Perdus (2026, con Pato Shoucair y BELCAST) · EVOLUTION · ROSAS (HYPER) · I WANNA GO (HARD-STYLE) · JUST FUCKING DANCE (track insignia) · Raw Cuts, Gloomy Day y Late Night Tape (EPs lo-fi, Mellow).",
+      },
+      { label: "Colaboraciones", text: "BELCAST · Pato Shoucair · Francely Abreuu · Twuan." },
+    ],
+    socials: [
+      { label: "Spotify", href: "https://open.spotify.com/artist/7JY2JDS3flgpRm8rrpss5W" },
+      { label: "TikTok", href: "https://www.tiktok.com/@velabeats" },
+    ],
   },
   {
     slug: "loops-roja",
@@ -507,10 +553,30 @@ export const lineup: Artist[] = [
     b2b: "alex-fierro",
     role: "Talento local · B2B",
     billing: "local",
-    photo: null, // TODO
-    photos: [],
-    bio: [], // TODO
-    socials: [], // TODO
+    // VERIFIED — media kit (References/artists/loops/). Fotos de su Instagram: TODO pedir originales y créditos.
+    genres: "Psytrance / Twilight · House / Techno como Roja",
+    photo: "/media/lineup/loops-roja/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/loops-roja/festival.jpg", alt: "Loop's tocando en una cabina Pioneer DJ al aire libre bajo luces de colores", aspect: "3/4" },
+      { src: "/media/lineup/loops-roja/bosque.jpg", alt: "Retrato de Lupita Rojas frente a un bosque en llamas", aspect: "3/4" },
+      { src: "/media/lineup/loops-roja/campo.jpg", alt: "Lupita Rojas con lentes neón señalando a cámara en un campo", aspect: "3/4" },
+    ],
+    bio: [
+      "Loop's es el proyecto de Lupita Rojas, DJ y productora de Chihuahua enfocada en el psytrance y el twilight. Desde 2025 ha tocado en las fiestas psy más activas de la ciudad, de Psy Wonderland y The Secret Circle en Epicentro Foro a Monoparty V, y ha llevado su sonido a otras plazas del país.",
+      "Como Roja explora su lado house y techno, un terreno que ya probó en vivo con su Techno Live en Creel. Sus sets combinan energía psicodélica con una presencia cercana y festiva en cabina: una de las voces femeninas que impulsan la escena psy del norte de México.",
+    ],
+    highlights: [
+      { label: "Dos proyectos", text: "Loop's (psytrance / twilight), su proyecto principal · Roja (house / techno), proyecto paralelo." },
+      {
+        label: "Presentaciones",
+        text: "Halloween Monoparty V · Psychedelic Experience: Girl Power · Camino a Raíces 2 · Psy Wonderland (Epicentro Foro) · The Secret Circle (Zulu, con sesión grabada para YouTube) · Yumari · Noches de Saico · Contest Atmosphere (Sheraton Soberano) · Loading Collective (Studiobar) · Techno Live como Roja (Creel).",
+      },
+      { label: "Ha compartido cartel con", text: "Creative Mind, Drastiko, Unfollow, Nava Kozz, Ubezleb, Mirrno, Neoving, Tejedk, Lixx, Saget, Yul's y Ever Tapia." },
+    ],
+    socials: [
+      { label: "Instagram", href: "https://instagram.com/loopsroja" },
+      { label: "SoundCloud", href: "https://soundcloud.com/loop-s-rojas" },
+    ],
   },
   {
     slug: "alex-fierro",
@@ -518,10 +584,22 @@ export const lineup: Artist[] = [
     b2b: "loops-roja",
     role: "Talento local · B2B",
     billing: "local",
-    photo: null, // TODO
-    photos: [],
-    bio: [], // TODO
-    socials: [], // TODO
+    // VERIFIED — media kit (References/artists/alexfierro/). Fotos de su Instagram: TODO pedir originales y créditos.
+    genres: "Psytech / Techno",
+    photo: "/media/lineup/alex-fierro/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/alex-fierro/cabina.jpg", alt: "Alex Fierro en la cabina frente a visuales azules", aspect: "1/1" },
+      { src: "/media/lineup/alex-fierro/sudadera.jpg", alt: "Retrato de Alex Fierro con sudadera negra y capucha", aspect: "1/1" },
+    ],
+    bio: [
+      "DJ de psytech y techno de Chihuahua. En cabina lleva la misma energía con la que entrena: sets intensos y de buena vibra, pensados para no soltar la pista.",
+      "Ha tocado recientemente en las ediciones de Psyline Records en Epicentro y Zulu, dos de los venues clave de la escena electrónica de la ciudad. Fuera de la cabina es coach en BioGym y una cara conocida de la comunidad fitness de Chihuahua.",
+    ],
+    highlights: [{ label: "Presentaciones", text: "Psyline Records en Epicentro y en Zulu, Chihuahua (psytech / techno)." }],
+    socials: [
+      { label: "Instagram", href: "https://instagram.com/alexfierro11" },
+      { label: "TikTok", href: "https://www.tiktok.com/@alexfierro11" },
+    ],
   },
   {
     // VERIFIED — press kit 2026 (References/artists/diasdeariel/). Nombre oficial en minúsculas, una palabra.
