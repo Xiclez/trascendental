@@ -4,8 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Eyes } from "@/components/flyer";
-import { ArtistPortrait, B2B } from "@/components/sections/lineup";
-import { artistBySlug, event, lineup, lineupCopy, site } from "@/content/trascendental";
+import { ArtistPortrait } from "@/components/sections/lineup";
+import { event, lineup, lineupCopy, site } from "@/content/trascendental";
 
 /** /lineup/[slug] — the "Ver detalles" page of each line-up card: photos, bio and socials. */
 
@@ -17,10 +17,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const artist = lineup.find((a) => a.slug === slug);
   if (!artist) return {};
   const name = artist.name;
-  const partner = artist.b2b ? artistBySlug(artist.b2b) : undefined;
   const title = `${name} · ${event.title} ${event.edition}`;
   const description =
-    artist.bio[0] ?? `${partner ? `${name} B2B ${partner.name}` : name} · ${artist.role} en ${event.title} ${event.edition} · ${event.dateLabel} · ${event.venue.name}.`;
+    artist.bio[0] ?? `${name} · ${artist.role} en ${event.title} ${event.edition} · ${event.dateLabel} · ${event.venue.name}.`;
   // Artist portrait when there is one; otherwise the event card. Explicit twitter too, or it inherits the home page's.
   const image = artist.photo
     ? { url: artist.photo, alt: name }
@@ -68,7 +67,6 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
               </span>
             ) : null}
             {artist.name}
-            <B2B artist={artist} />
           </h1>
           {artist.genres ? <p className="label mt-4 text-[11px] text-ink">{artist.genres}</p> : null}
           <p className="numeral mt-4 text-2xl text-ink">

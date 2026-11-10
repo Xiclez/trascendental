@@ -431,8 +431,9 @@ export const lineup: Artist[] = [
     name: "Héctor Chaparro",
     role: "Headliner · Creador de Trascendental",
     billing: "headliner",
-    photo: "/media/lineup/hector-chaparro/hero-artist-1.jpg",
+    photo: "/media/lineup/hector-chaparro/retrato.jpg",
     photos: [
+      { src: "/media/lineup/hector-chaparro/hero-artist-1.jpg", alt: "Retrato de Héctor Chaparro" },
       { src: "/media/historial/foto-2.jpg", alt: "Héctor Chaparro en la cabina con luz magenta" },
       { src: "/media/historial/foto-4.jpg", alt: "Héctor Chaparro frente al público con luz violeta" },
       { src: "/media/historial/foto-1.jpg", alt: "Pantalla con el nombre de Héctor Chaparro sobre el público" },
@@ -453,7 +454,7 @@ export const lineup: Artist[] = [
     // TODO — el kit marca por confirmar si "Amants Perdus" / "Mírame" (2026) son de este BELCAST; no se mencionan aquí.
     slug: "carlos-belcast",
     name: "Carlos Belcast",
-    role: "Invitado especial",
+    role: "Headliner",
     billing: "special",
     genres: "Hardstyle / Hyper",
     photo: "/media/lineup/carlos-belcast/retrato.jpg",
@@ -486,7 +487,7 @@ export const lineup: Artist[] = [
     // VERIFIED — press kit 2026 (References/artists/pato-shoucair/). Fotos recortadas del mismo PDF.
     slug: "pato-shoucair",
     name: "Pato Shoucair",
-    role: "Invitado especial",
+    role: "Headliner",
     billing: "special",
     genres: "Electrónica melódica",
     photo: "/media/lineup/pato-shoucair/retrato.jpg",
@@ -519,7 +520,7 @@ export const lineup: Artist[] = [
     // TODO — Instagram, ciudad base y fechas en vivo (el kit no las tiene).
     slug: "vela-beats",
     name: "Vela Beats",
-    role: "Invitado especial",
+    role: "Headliner",
     billing: "special",
     genres: "Hardstyle / Hyper / House",
     photo: "/media/lineup/vela-beats/retrato.jpg",
@@ -605,7 +606,7 @@ export const lineup: Artist[] = [
     // VERIFIED — press kit 2026 (References/artists/diasdeariel/). Nombre oficial en minúsculas, una palabra.
     slug: "diasdeariel",
     name: "diasdeariel",
-    b2b: "de-la-reiver",
+    b2b: "maumi",
     role: "Talento local · B2B",
     billing: "local",
     genres: "Tech House / Melodic House / Afro House",
@@ -638,20 +639,53 @@ export const lineup: Artist[] = [
     ],
   },
   {
+    // VERIFIED — media kit 2026 (References/artists/maumi/). Fotos de su Instagram: TODO pedir originales y créditos.
+    // TODO — el kit marca por confirmar: nombre completo, ciudad base, año de inicio, géneros y relación con Baby Grooves.
+    slug: "maumi",
+    name: "maumi",
+    b2b: "diasdeariel",
+    role: "El Paso, TX · B2B",
+    billing: "local",
+    genres: "House · DJ y live set", // TODO confirmar géneros (sus carteles lo ubican en noches de house)
+    photo: "/media/lineup/maumi/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/maumi/auto.jpg", alt: "maumi con audífonos y laptop en el asiento trasero de un auto", aspect: "3/4" },
+      { src: "/media/lineup/maumi/selfie.jpg", alt: "maumi con gorra y lentes oscuros en un auto con techo panorámico", aspect: "3/4" },
+    ],
+    bio: [
+      "Productor musical que se presenta con dos palabras: sexy sounds. Su trabajo empieza en el estudio, entre sintetizadores, consola y Ableton, y termina en la cabina, donde presenta su música en formato DJ y live set.",
+      "En 2026 abrió para Tom & Collins en The Baths, en Austin, durante el fin de semana del Gran Premio de Estados Unidos de Fórmula 1. Antes, en marzo, firmó su propia noche con line-up invitado en Stanton House, El Paso.",
+    ],
+    highlights: [
+      { label: "Sonido", text: "Productor antes que DJ: trabaja en estudio con hardware y Ableton, y lleva su material a la cabina en live set además del DJ set." },
+      {
+        label: "Presentaciones",
+        text: "Race Weekend Party en The Baths, Austin (23.10.26, soporte de Tom & Collins junto a Aner, Kike y Lagunes) · maumi + guest line up en Stanton House, El Paso (14.03.26) · Baby Grooves, El Paso (28.11.26).",
+      },
+    ],
+    socials: [
+      { label: "Instagram", href: "https://instagram.com/maumimusic" },
+      { label: "Linktree", href: "https://linktr.ee/maumimusic" },
+      { label: "Baby Grooves", href: "https://instagram.com/babygroovesofficial" },
+    ],
+  },
+  {
     // VERIFIED — EPK https://delareiver-presskit.vercel.app/ (fotos y video del artista: References/artists/de-la-reiver/).
     slug: "de-la-reiver",
     name: "De La Reiver",
-    b2b: "diasdeariel",
+    b2b: "moreno",
     role: "Talento local · B2B",
     billing: "local",
     genres: "Tech House / House",
     photo: "/media/lineup/de-la-reiver/retrato.jpg",
     photos: [
+      { src: "/media/lineup/de-la-reiver/padrino.jpg", alt: "De La Reiver con gorra y lentes bajo una estructura metálica con luz violeta", aspect: "2/3" },
       { src: "/media/lineup/de-la-reiver/graffiti.jpg", alt: "De La Reiver frente a un muro de graffiti", aspect: "3/2" },
       { src: "/media/lineup/de-la-reiver/kiosco.jpg", alt: "De La Reiver en cuclillas bajo un kiosco iluminado de noche", aspect: "2/3" },
     ],
     videos: [
       { src: "/media/lineup/de-la-reiver/video-1.mp4", poster: "/media/lineup/de-la-reiver/video-1.jpg", alt: "De La Reiver en la cabina de Sensory Groove con luces rojas", aspect: "16/9" },
+      { src: "/media/lineup/de-la-reiver/video-2.mp4", poster: "/media/lineup/de-la-reiver/video-2.jpg", alt: "De La Reiver en la cabina de Sensory Groove frente a la pista, entre láseres violetas", aspect: "1080/404" },
     ],
     bio: [
       "DJ emergente de la escena electrónica, influenciado por el tech house y la cultura rave. Su estilo destaca por grooves profundos, bajos potentes y una energía envolvente que conecta con la pista.",
@@ -668,6 +702,38 @@ export const lineup: Artist[] = [
     socials: [
       { label: "Instagram", href: "https://www.instagram.com/de_la_reiver/" },
       { label: "SoundCloud", href: "https://soundcloud.com/suisrap1986" },
+    ],
+  },
+  {
+    // VERIFIED — media kit 2026 (References/artists/moreno/). Fotos de su Instagram: TODO pedir originales y créditos.
+    // TODO — el kit marca por confirmar: nombre completo, edad, año de inicio y lista completa de residencias.
+    slug: "moreno",
+    name: "Moreno",
+    b2b: "de-la-reiver",
+    role: "Talento local · B2B",
+    billing: "local",
+    genres: "Open Format / Bass Music",
+    photo: "/media/lineup/moreno/retrato.jpg",
+    photos: [
+      { src: "/media/lineup/moreno/red-bull.jpg", alt: "Moreno con audífonos y lentes naranjas en la cabina frente a un letrero de Red Bull", aspect: "3/4" },
+      { src: "/media/lineup/moreno/mirador.jpg", alt: "Moreno recargado en un poste en un mirador sobre la ciudad de Chihuahua", aspect: "3/4" },
+    ],
+    bio: [
+      "Moreno, también conocido como Moreno MX, es un DJ de Chihuahua. Empezó a los 15 años en fiestas, bares y antros de la ciudad, y en su primer año de residencias ya sumaba más de cinco venues, entre ellos Dembow CUU y Back Room.",
+      "Su set cruza dos mundos: el formato abierto que llena la pista (reggaetón, trap latino y el pop que todos corean) y una vena de bass music (dubstep, riddim, brostep) que lo ha puesto en los line-ups electrónicos del Outdoor Stage de Zulu, en fechas producidas junto a Psyline Records y Loading Collective.",
+    ],
+    highlights: [
+      { label: "Dos sets", text: "Club / open format: reggaetón, trap latino, perreo, pop y throwbacks · Rave / bass: dubstep, riddim y brostep." },
+      {
+        label: "Presentaciones",
+        text: "Pop Up Rave · Viva La Dance (19.09.26) · CODE:08, Zulu Outdoor Stage (14.08.26, slot principal) · Sabina Palma: Øverride, Zulu Outdoor Stage (06.06.26, Psyline Records × Loading Collective) · Una Noche en Familia, Zulu Cocktail & Lounge (07.11.25).",
+      },
+      { label: "Venues y plazas", text: "Zulu · Level · Normal CUU · Dembow CUU · Back Room · R14 Club · Opal Night · Crypto TRC · Puerto Vallarta." },
+    ],
+    socials: [
+      { label: "Instagram", href: "https://instagram.com/morenomxdj" },
+      { label: "TikTok", href: "https://www.tiktok.com/@morenomxdj" },
+      { label: "SoundCloud", href: "https://soundcloud.com/morenomxdj" },
     ],
   },
 ];

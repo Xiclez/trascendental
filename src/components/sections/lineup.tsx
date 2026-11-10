@@ -7,7 +7,7 @@ import { ArrowUpRight } from "lucide-react";
 import { Eyes, Orb } from "@/components/flyer";
 import { SnapControls, trackClass, useSnapTrack } from "@/components/snap-track";
 import { Section } from "@/components/ui";
-import { artistBySlug, event, lineupCopy, lineupSlots, slotName, type Artist } from "@/content/trascendental";
+import { event, lineupCopy, lineupSlots, slotName, type Artist } from "@/content/trascendental";
 import { rise } from "@/lib/motion";
 
 /** Portrait or, until the photo arrives, the flyer's engraved orb with the name set in ink. */
@@ -29,20 +29,6 @@ export function ArtistPortrait({ artist, sizes, priority }: { artist: Artist; si
       <Orb className="pointer-events-none absolute left-1/2 top-1/2 w-[150%] -translate-x-1/2 -translate-y-1/2 text-rule" />
       <span className="label relative text-[10px] text-graphite">{lineupCopy.noPhoto}</span>
     </div>
-  );
-}
-
-/** "B2B Alex Fierro", the partner linking to their own page. */
-export function B2B({ artist, className = "" }: { artist: Artist; className?: string }) {
-  const partner = artist.b2b ? artistBySlug(artist.b2b) : undefined;
-  if (!partner) return null;
-  return (
-    <span className={`block ${className}`}>
-      <span className="label text-[0.32em] align-middle text-graphite">B2B</span>{" "}
-      <Link href={`/lineup/${partner.slug}`} className="hover:underline">
-        {partner.name}
-      </Link>
-    </span>
   );
 }
 
