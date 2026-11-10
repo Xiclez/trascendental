@@ -18,6 +18,7 @@ import {
 } from "@/lib/server/admin-auth";
 import { deliverOrder, tierLabel } from "@/lib/server/notify";
 import { checkIn, createCourtesy, voidPaidOrder } from "@/lib/server/orders";
+import { clampPct, salesDisplay, saveSalesDisplay, type TierDisplay } from "@/lib/server/sales-display";
 import {
   authenticateStaff,
   createStaff,
@@ -109,6 +110,33 @@ export async function voidOrder(fd: FormData) {
   if (!/^[0-9a-f-]{36}$/i.test(orderId)) return;
   await voidPaidOrder(orderId);
   revalidatePath("/admin", "layout");
+}
+
+/* ------------------------------------------------------ marketing display */
+
+/** The switch: on = public site shows the custom % / forced sold-outs, off = real stats. */
+export async function toggleSalesDisplay(fd: FormData) {
+  await requireAdmin();
+  const current = await salesDisplay();
+  await saveSalesDisplay({ ...current, enabled: str(fd, "enabled") === "on" });
+  revalidatePath("/", "layout");
+}
+
+export async function saveSalesDisplayTiers(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const current = await salesDisplay();
+  const tiers: Record<string, TierDisplay> = {};
+  for (const t of tickets) {
+    const raw = str(fd, `pct:${t.id}`);
+    const n = Number(raw);
+    if (raw && (!Number.isFinite(n) || n < 0 || n > 99)) {
+      return { error: `${t.name} · ${t.phase}: el porcentaje va de 0 a 99 (para 100% marca “Agotada”).` };
+    }
+    tiers[t.id] = { pct: raw ? clampPct(n) : null, soldout: fd.get(`soldout:${t.id}`) === "on" };
+  }
+  await saveSalesDisplay({ ...current, tiers });
+  revalidatePath("/", "layout");
+  return { ok: current.enabled ? "Guardado. Ya se ve en el sitio." : "Guardado. Se aplicará al activar el porcentaje personalizado." };
 }
 
 /** "Registrar ingreso" on /t/[code] (any staff). */

@@ -82,6 +82,9 @@ scripts/generate-tee.mjs       genera el GLB placeholder
   (35 min), bajo `pg_advisory_xact_lock`. Cortesías NO consumen cupo. `availability: "soldout"` cierra a mano.
 - Público ve SOLO % vendido (`soldPct`, nunca 100% si queda algo); cantidades exactas solo en /admin.
   Los mensajes de error del checkout tampoco revelan cuántos quedan.
+- Porcentaje público (marketing): switch en /admin (`settings.sales_display`, `src/lib/server/sales-display.ts`). Activo =
+  `soldPct` fijo por fase (0–99, vacío = real) y "Agotada" cierra la fase DE VERDAD (abre la siguiente; también en
+  `assertStock`). Inactivo = stats reales. Un agotado real siempre gana. Las cifras del admin siempre son reales.
 - Boletos: se emiten SOLO en `fulfillCheckoutSession` (idempotente; webhook + success). Un QR por boleto → `/t/{code}`.
   Entrega por canal con `*_sent_at` / `*_error` en `orders`; el admin puede "Reenviar".
 - Staff: admin maestro = usuario `admin` + `ADMIN_PASSWORD`; demás cuentas en `staff_users` (rol `admin` o `scanner`).

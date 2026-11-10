@@ -1,8 +1,10 @@
 import { btn, field } from "@/app/admin/styles";
+import { SalesDisplayForm, SalesDisplaySwitch } from "@/app/admin/forms";
 import { OrdersTable } from "@/app/admin/orders-table";
 import { formatPrice, tickets } from "@/content/trascendental";
 import { listOrders, orderCounts } from "@/lib/server/admin-data";
-import { availabilityOf, remainingOf, tierStats } from "@/lib/server/inventory";
+import { availabilityOf, publicTier, remainingOf, soldPctOf, tierStats } from "@/lib/server/inventory";
+import { salesDisplay } from "@/lib/server/sales-display";
 
 const availabilityText = {
   available: "Abierta",
@@ -24,7 +26,12 @@ function Stat({ label, value, note }: { label: string; value: string; note?: str
 
 export default async function AdminSales({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q } = await searchParams;
-  const [stats, counts, orders] = await Promise.all([tierStats(), orderCounts(), listOrders({ q: q?.trim() || undefined })]);
+  const [stats, counts, orders, display] = await Promise.all([
+    tierStats(),
+    orderCounts(),
+    listOrders({ q: q?.trim() || undefined }),
+    salesDisplay(),
+  ]);
   const rows = tickets.map((t) => ({ tier: t, s: stats.get(t.id)! }));
   const total = rows.reduce(
     (a, { s }) => ({
@@ -105,6 +112,33 @@ export default async function AdminSales({ searchParams }: { searchParams: Promi
         “En checkout” son boletos apartados por compradores que están pagando en Stripe; se liberan a los 35 min si no
         pagan. Las cortesías no consumen cupo.
       </p>
+
+      <div className="mt-12 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="label text-[11px] text-ink">Porcentaje público (marketing)</h2>
+        <SalesDisplaySwitch enabled={display.enabled} />
+      </div>
+      <p className="mt-2 max-w-3xl text-xs text-graphite">
+        {display.enabled
+          ? "Activo: el sitio muestra el % personalizado de cada fase (vacío = real). “Agotada” cierra la fase de verdad y abre la siguiente. Las cifras de arriba siguen siendo las reales."
+          : "Inactivo: el sitio muestra las estadísticas reales. Puedes dejar los valores listos y activarlo después."}{" "}
+        Si una fase se agota de verdad, se muestra agotada aunque tenga un % personalizado.
+      </p>
+      <SalesDisplayForm
+        enabled={display.enabled}
+        rows={rows.map(({ tier, s }) => {
+          const shown = publicTier(tier, stats, display);
+          return {
+            id: tier.id,
+            label: `${tier.name} · ${tier.phase}`,
+            realPct: soldPctOf(tier, s),
+            realState: availabilityText[availabilityOf(tier, stats)],
+            publicState: availabilityText[shown.availability],
+            publicPct: shown.soldPct,
+            pct: display.tiers[tier.id]?.pct ?? null,
+            soldout: display.tiers[tier.id]?.soldout ?? false,
+          };
+        })}
+      />
 
       <div className="mt-12 flex flex-wrap items-end justify-between gap-4">
         <h2 className="label text-[11px] text-ink">Órdenes</h2>

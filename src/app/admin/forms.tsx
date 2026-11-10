@@ -1,7 +1,16 @@
 "use client";
 
 import { useActionState } from "react";
-import { addStaff, admitTicket, courtesy, login, resetStaffPassword, type FormState } from "@/app/admin/actions";
+import {
+  addStaff,
+  admitTicket,
+  courtesy,
+  login,
+  resetStaffPassword,
+  saveSalesDisplayTiers,
+  toggleSalesDisplay,
+  type FormState,
+} from "@/app/admin/actions";
 import { btn, field } from "@/app/admin/styles";
 
 function Message({ state }: { state: FormState }) {
@@ -165,6 +174,100 @@ export function AdmitForm({ code }: { code: string }) {
         {pending ? "Registrando…" : state?.ok ? "Ingreso registrado" : "Registrar ingreso"}
       </button>
       <Message state={state} />
+    </form>
+  );
+}
+
+/** Switch for the marketing display. Submits on click; the server re-renders the new state. */
+export function SalesDisplaySwitch({ enabled }: { enabled: boolean }) {
+  return (
+    <form action={toggleSalesDisplay}>
+      <input type="hidden" name="enabled" value={enabled ? "off" : "on"} />
+      <button type="submit" role="switch" aria-checked={enabled} className="inline-flex min-h-11 items-center gap-3 text-ink">
+        <span aria-hidden className={`relative inline-block h-6 w-11 border border-ink transition-colors ${enabled ? "bg-ink" : "bg-card"}`}>
+          <span className={`absolute top-0.5 size-[18px] transition-[left] ${enabled ? "left-[22px] bg-paper" : "left-0.5 bg-ink"}`} />
+        </span>
+        <span className="label text-[10px]">Porcentaje personalizado {enabled ? "activo" : "inactivo"}</span>
+      </button>
+    </form>
+  );
+}
+
+export type SalesDisplayRow = {
+  id: string;
+  label: string;
+  realPct: number | null;
+  realState: string;
+  publicState: string;
+  publicPct: number | null;
+  pct: number | null;
+  soldout: boolean;
+};
+
+export function SalesDisplayForm({ rows, enabled }: { rows: SalesDisplayRow[]; enabled: boolean }) {
+  const [state, action, pending] = useActionState(saveSalesDisplayTiers, null);
+  return (
+    <form action={action} className={`mt-4 border border-rule bg-card/60 ${enabled ? "" : "opacity-70"}`}>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left text-sm">
+          <thead>
+            <tr className="label border-b border-rule text-[10px] text-graphite">
+              <th className="p-3 font-normal">Fase</th>
+              <th className="p-3 font-normal">Real</th>
+              <th className="p-3 font-normal">% personalizado</th>
+              <th className="p-3 font-normal">Agotar fase</th>
+              <th className="p-3 font-normal">El público ve</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-rule">
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="p-3 text-ink">{r.label}</td>
+                <td className="p-3 tabular-nums">
+                  {r.realPct != null ? `${r.realPct}%` : "—"}
+                  <span className="block text-xs text-graphite">{r.realState}</span>
+                </td>
+                <td className="p-3">
+                  <label className="sr-only" htmlFor={`pct-${r.id}`}>
+                    Porcentaje para {r.label}
+                  </label>
+                  <span className="flex items-center gap-2">
+                    <input
+                      id={`pct-${r.id}`}
+                      name={`pct:${r.id}`}
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={99}
+                      step={1}
+                      defaultValue={r.pct ?? ""}
+                      placeholder="Real"
+                      className={`${field.replace("mt-2 ", "")} w-24 tabular-nums`}
+                    />
+                    <span className="text-graphite">%</span>
+                  </span>
+                </td>
+                <td className="p-3">
+                  <label className="inline-flex min-h-11 cursor-pointer items-center gap-2">
+                    <input type="checkbox" name={`soldout:${r.id}`} defaultChecked={r.soldout} className="size-5 accent-[var(--color-ink)]" />
+                    <span className="text-xs text-graphite">Agotada</span>
+                  </label>
+                </td>
+                <td className="p-3 tabular-nums">
+                  {r.publicPct != null ? `${r.publicPct}%` : "—"}
+                  <span className="block text-xs text-graphite">{r.publicState}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="border-t border-rule p-4">
+        <button type="submit" disabled={pending} className={btn}>
+          {pending ? "Guardando…" : "Guardar porcentajes"}
+        </button>
+        <Message state={state} />
+      </div>
     </form>
   );
 }

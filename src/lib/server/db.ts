@@ -96,6 +96,13 @@ create table if not exists staff_users (
 
 -- Who let each ticket in ('admin' = master password, otherwise staff username).
 alter table tickets add column if not exists checked_in_by text;
+
+-- Panel settings as JSON by key (e.g. 'sales_display': custom sold % for marketing, src/lib/server/sales-display.ts).
+create table if not exists settings (
+  key        text primary key,
+  value      jsonb not null,
+  updated_at timestamptz not null default now()
+);
 `;
 
 export async function migrate() {

@@ -1,6 +1,7 @@
 import type { Sql, TransactionSql } from "postgres";
 import { lowStockPct, purchasable, tickets, type Availability, type LiveTier, type TicketTier } from "@/content/trascendental";
 import { db, dbConfigured } from "@/lib/server/db";
+import { REAL_DISPLAY, salesDisplay, type SalesDisplay } from "@/lib/server/sales-display";
 
 /**
  * Ticket inventory per phase. A phase's capacity is consumed by paid orders plus
@@ -55,19 +56,24 @@ type Stats = Map<string, TierStats>;
 /**
  * Live state of a tier. Sequential phases: a tier with `opensAfter` stays "upcoming"
  * until the previous one is sold out (or its window closed).
+ * With the marketing display on, a phase marked sold out closes for real and a custom
+ * % drives "Pocos lugares"; pass REAL_DISPLAY (default) for the true state.
  */
-export function availabilityOf(tier: TicketTier, stats: Stats, now = Date.now()): Availability {
+export function availabilityOf(tier: TicketTier, stats: Stats, display: SalesDisplay = REAL_DISPLAY, now = Date.now()): Availability {
   if (tier.availability === "soldout" || tier.availability === "closed") return tier.availability;
   if (tier.salesEndAt && now >= Date.parse(tier.salesEndAt)) return "closed";
+  const custom = display.enabled ? display.tiers[tier.id] : undefined;
+  if (custom?.soldout) return "soldout";
   if (tier.opensAfter) {
     const prev = tickets.find((t) => t.id === tier.opensAfter);
-    const prevState = prev ? availabilityOf(prev, stats, now) : "soldout";
+    const prevState = prev ? availabilityOf(prev, stats, display, now) : "soldout";
     if (prevState !== "soldout" && prevState !== "closed") return "upcoming";
   }
   const remaining = remainingOf(tier, stats.get(tier.id));
-  if (remaining == null) return tier.availability;
-  if (remaining <= 0) return "soldout";
-  return soldPctOf(tier, stats.get(tier.id))! >= lowStockPct ? "low" : "available";
+  if (remaining != null && remaining <= 0) return "soldout";
+  const pct = custom?.pct ?? soldPctOf(tier, stats.get(tier.id));
+  if (pct == null) return tier.availability;
+  return pct >= lowStockPct ? "low" : "available";
 }
 
 /** Rounded sold percentage (paid + in checkout). Never shows 100% while tickets remain. */
@@ -78,17 +84,22 @@ export function soldPctOf(tier: TicketTier, s: TierStats | undefined) {
   return used < tier.capacity ? Math.min(99, pct) : 100;
 }
 
-const withoutDb = (): LiveTier[] => {
-  const empty: Stats = new Map();
-  return tickets.map((t) => ({ ...t, availability: availabilityOf(t, empty), soldPct: soldPctOf(t, undefined) }));
-};
+/** What the public sees for a tier: real stats, or the marketing display when it's on. */
+export function publicTier(tier: TicketTier, stats: Stats, display: SalesDisplay = REAL_DISPLAY): LiveTier {
+  const availability = availabilityOf(tier, stats, display);
+  const custom = display.enabled ? display.tiers[tier.id] : undefined;
+  const soldPct = availability === "soldout" ? (tier.capacity || custom ? 100 : null) : (custom?.pct ?? soldPctOf(tier, stats.get(tier.id)));
+  return { ...tier, availability, soldPct };
+}
+
+const withoutDb = (): LiveTier[] => tickets.map((t) => publicTier(t, new Map()));
 
 /** Content tiers merged with live stock. Falls back to the static content if the DB is down. */
 export async function liveTiers(): Promise<LiveTier[]> {
   if (!dbConfigured()) return withoutDb();
   try {
-    const stats = await tierStats();
-    return tickets.map((t) => ({ ...t, availability: availabilityOf(t, stats), soldPct: soldPctOf(t, stats.get(t.id)) }));
+    const [stats, display] = await Promise.all([tierStats(), salesDisplay()]);
+    return tickets.map((t) => publicTier(t, stats, display));
   } catch (err) {
     console.error("[inventory]", err);
     return withoutDb();
@@ -110,11 +121,11 @@ const blockedMessage: Partial<Record<Availability, string>> = {
  */
 export async function assertStock(tx: TransactionSql, wanted: Map<string, number>) {
   await tx`select pg_advisory_xact_lock(4026)`;
-  const stats = await tierStats(tx);
+  const [stats, display] = await Promise.all([tierStats(tx), salesDisplay(tx)]);
   for (const [tierId, qty] of wanted) {
     const tier = tickets.find((t) => t.id === tierId);
     if (!tier) continue;
-    const state = availabilityOf(tier, stats);
+    const state = availabilityOf(tier, stats, display);
     if (!purchasable(state)) throw new SoldOutError(`${tier.name} · ${tier.phase} ${blockedMessage[state] ?? "no está disponible"}.`);
     const remaining = remainingOf(tier, stats.get(tierId));
     if (remaining != null && qty > remaining) {
