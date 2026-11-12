@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { resend, voidOrder } from "@/app/admin/actions";
-import { formatPrice, products, tickets } from "@/content/trascendental";
+import { formatPrice, merchVariant, products, tickets } from "@/content/trascendental";
 import type { AdminOrder } from "@/lib/server/admin-data";
 
 const tz = "America/Chihuahua";
@@ -21,8 +21,7 @@ function lineName(l: AdminOrder["lines"][number]) {
     return t ? `${t.name} · ${t.phase}` : l.item_id;
   }
   const p = products.find((x) => x.id === l.item_id);
-  const model = p?.models?.find((m) => m.id === l.model)?.name ?? l.model;
-  return [p?.name ?? l.item_id, model, l.color, l.size].filter(Boolean).join(" · ");
+  return [p?.name ?? l.item_id, merchVariant(p, l)].filter(Boolean).join(" · ");
 }
 
 function Delivery({ order, channel }: { order: AdminOrder; channel: "email" | "whatsapp" }) {

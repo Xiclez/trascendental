@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { products, tickets } from "@/content/trascendental";
+import { merchVariant, products, tickets } from "@/content/trascendental";
 
 /**
  * Client-side cart. Lines only carry ids + variant; names and prices are always
@@ -15,6 +15,8 @@ export type CartLine = {
   /** Design id for products with `models` (e.g. the tee). */
   model?: string;
   color?: string;
+  /** Cut: "hombre" | "mujer". */
+  fit?: string;
   size?: string;
 };
 
@@ -42,9 +44,14 @@ export function lineInfo(line: CartLine) {
   }
   const p = products.find((x) => x.id === line.id);
   if (!p) return null;
-  const model = p.models?.find((m) => m.id === line.model)?.name;
-  const color = p.colors?.find((c) => c.id === line.color)?.name;
-  return { name: p.name, price: p.price, meta: [model, color, line.size].filter(Boolean).join(" · ") };
+  return { name: p.name, price: p.price, meta: merchVariant(p, line) };
+}
+
+/** Every variant the product asks for is set (the checkout rejects the cart otherwise). */
+function complete(line: CartLine) {
+  if (line.kind !== "product") return true;
+  const p = products.find((x) => x.id === line.id);
+  return Boolean(p && (!p.fits || line.fit) && (!p.colors || line.color) && (!p.models || line.model));
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -55,8 +62,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
+      // Drops lines that no longer validate (e.g. a tee saved before the Hombre/Mujer cut existed).
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from storage
-      if (raw) setLines((JSON.parse(raw) as CartLine[]).filter((l) => lineInfo(l)));
+      if (raw) setLines((JSON.parse(raw) as CartLine[]).filter((l) => lineInfo(l) && complete(l)));
     } catch {
       /* storage unavailable — cart stays in memory */
     }
@@ -73,7 +81,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [lines, hydrated]);
 
   const add = useCallback<CartState["add"]>((line, quantity = 1) => {
-    const key = [line.kind, line.id, line.model, line.color, line.size].filter(Boolean).join(":");
+    const key = [line.kind, line.id, line.model, line.color, line.fit, line.size].filter(Boolean).join(":");
     setLines((prev) => {
       const found = prev.find((l) => l.key === key);
       if (found)

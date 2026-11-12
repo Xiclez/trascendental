@@ -32,7 +32,10 @@ type Props = {
   designs: TeeDesign[];
 };
 
-const DECAL_DEPTH = 0.3; // projection box depth; the torso surface is at z ≈ ±0.23
+// Tuned for public/models/tee.glb (scripts/prepare-tee.mjs): the chest is at z ≈ 0.15…0.36, the back at
+// z ≈ −0.37…−0.31. Each projection box (centre ±DECAL_Z, depth DECAL_DEPTH) reaches only its own side.
+const DECAL_Z = 0.2;
+const DECAL_DEPTH = 0.5;
 const sameDesign = (a: TeeDesign, b: TeeDesign) => a.front.src === b.front.src && a.back.src === b.back.src;
 
 const TURNTABLE_SPEED = 0.32; // rad/s — DRIFT
@@ -70,7 +73,24 @@ type Drag = {
 function Tee({ fabric, model, design, designs, track }: Omit<Props, "className"> & { track: HTMLElement }) {
   const reduced = useReducedMotion();
   const gltf = useGLTF(model);
-  const geometry = (gltf.nodes.Tee as THREE.Mesh).geometry;
+  const node = gltf.nodes.Tee as THREE.Mesh;
+  // meshopt quantises the vertices and moves the real scale/offset onto the node: bake it back
+  // (as float, so it can't clip) so the geometry — and the print placements — are in model units.
+  const geometry = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    for (const name of ["position", "normal"] as const) {
+      const a = node.geometry.getAttribute(name);
+      const arr = new Float32Array(a.count * a.itemSize);
+      for (let i = 0; i < a.count; i++) for (let c = 0; c < a.itemSize; c++) arr[i * a.itemSize + c] = a.getComponent(i, c);
+      g.setAttribute(name, new THREE.BufferAttribute(arr, a.itemSize));
+    }
+    g.setIndex(node.geometry.getIndex());
+    node.updateMatrix();
+    g.applyMatrix4(node.matrix);
+    g.computeBoundingSphere();
+    return g;
+  }, [node]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
   const urls = useMemo(() => [...new Set(designs.flatMap((d) => [d.front.src, d.back.src]))], [designs]);
   const textures = useTexture(urls, (loaded) => {
     for (const t of Array.isArray(loaded) ? loaded : [loaded]) {
@@ -236,6 +256,7 @@ function Tee({ fabric, model, design, designs, track }: Omit<Props, "className">
               sheen={0.5}
               sheenRoughness={0.8}
               sheenColor={current.fabric}
+              side={THREE.DoubleSide} // single-layer cloth: the inside shows at the collar, sleeves and hem
             />
             {/* The real artwork, projected front and back so it follows the fabric curvature.
                 Keyed by image so the decal geometry is rebuilt with the new placement. */}
@@ -246,7 +267,7 @@ function Tee({ fabric, model, design, designs, track }: Omit<Props, "className">
                 <Decal
                   key={`${side}-${p.src}`}
                   // Seen from behind (rotated π), +x flips: mirror x so the print stays centred where measured.
-                  position={[back ? -p.position[0] : p.position[0], p.position[1], back ? -0.12 : 0.12]}
+                  position={[back ? -p.position[0] : p.position[0], p.position[1], back ? -DECAL_Z : DECAL_Z]}
                   rotation={[0, back ? Math.PI : 0, 0]}
                   scale={[p.scale[0], p.scale[1], DECAL_DEPTH]}
                 >
@@ -332,7 +353,7 @@ function Rig({ track, mobile, tee }: { track: HTMLElement; mobile: boolean; tee:
         <Lightformer form="rect" intensity={0.5} position={[4, 0, -1]} rotation-y={-Math.PI / 2} scale={[3, 3, 1]} />
       </Environment>
       <ContactShadows
-        position={[0, -0.74, 0]}
+        position={[0, -0.93, 0]}
         opacity={0.42}
         scale={3}
         blur={2.8}

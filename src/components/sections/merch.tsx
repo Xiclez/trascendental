@@ -53,33 +53,36 @@ function ColorPicker({
   );
 }
 
-function SizePicker({
-  sizes,
+/** Text radios: size ("Talla") and cut ("Corte": Hombre / Mujer). */
+function ChoicePicker({
+  legend,
+  options,
   value,
   onChange,
   name,
 }: {
-  sizes: string[];
+  legend: string;
+  options: { id: string; name: string }[];
   value: string;
-  onChange: (s: string) => void;
+  onChange: (id: string) => void;
   name: string;
 }) {
   return (
     <fieldset>
-      <legend className="label mb-3 text-[10px] text-graphite">Talla</legend>
+      <legend className="label mb-3 text-[10px] text-graphite">{legend}</legend>
       <div className="flex flex-wrap gap-2">
-        {sizes.map((s) => (
-          <label key={s} className="cursor-pointer">
+        {options.map((o) => (
+          <label key={o.id} className="cursor-pointer">
             <input
               type="radio"
               name={name}
-              value={s}
-              checked={value === s}
-              onChange={() => onChange(s)}
+              value={o.id}
+              checked={value === o.id}
+              onChange={() => onChange(o.id)}
               className="peer sr-only"
             />
             <span className="label inline-flex min-h-11 min-w-11 items-center justify-center border border-rule px-3 text-[11px] text-graphite transition-colors peer-checked:border-ink peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent)]">
-              {s}
+              {o.name}
             </span>
           </label>
         ))}
@@ -87,6 +90,8 @@ function SizePicker({
     </fieldset>
   );
 }
+
+const sizeOptions = (sizes: string[]) => sizes.map((s) => ({ id: s, name: s }));
 
 type View = "front" | "back" | "3d";
 
@@ -176,6 +181,8 @@ function Showcase({ product }: { product: Product }) {
   const sizes = product.sizes ?? [];
   const [color, setColor] = useState(colors[0]?.id ?? "");
   const [size, setSize] = useState(sizes[1] ?? sizes[0] ?? "");
+  const fits = product.fits ?? [];
+  const [fit, setFit] = useState(fits[0]?.id ?? "");
   const active = colors.find((c) => c.id === color) ?? colors[0];
   const models = useMemo(() => product.models ?? [], [product.models]);
   const [modelId, setModelId] = useState(models[0]?.id ?? "");
@@ -236,17 +243,25 @@ function Showcase({ product }: { product: Product }) {
             {view !== "3d" ? <MockupNote className="text-center" /> : null}
           </div>
         ) : null}
+        {view === "3d" || !hasPhotos ? (
+          <p className="mt-1 text-center text-[10px] text-graphite">
+            <a href={merchCopy.modelCredit.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center hover:text-ink">
+              {merchCopy.modelCredit.text}
+            </a>
+          </p>
+        ) : null}
       </motion.div>
 
       <motion.div variants={rise} className="order-3 space-y-8">
         <p className="display text-5xl tabular-nums">{formatPrice(product.price)}</p>
         {models.length ? <ModelPicker models={models} value={modelId} onChange={setModelId} name="showcase-model" /> : null}
         {colors.length ? <ColorPicker colors={colors} value={color} onChange={setColor} name="showcase-color" /> : null}
-        {sizes.length ? <SizePicker sizes={sizes} value={size} onChange={setSize} name="showcase-size" /> : null}
+        {fits.length ? <ChoicePicker legend={merchCopy.fit} options={fits} value={fit} onChange={setFit} name="showcase-fit" /> : null}
+        {sizes.length ? <ChoicePicker legend="Talla" options={sizeOptions(sizes)} value={size} onChange={setSize} name="showcase-size" /> : null}
         <Magnetic>
           <button
             type="button"
-            onClick={() => add({ kind: "product", id: product.id, model: modelId || undefined, color, size })}
+            onClick={() => add({ kind: "product", id: product.id, model: modelId || undefined, color, fit: fit || undefined, size })}
             className="label inline-flex min-h-12 items-center justify-center bg-ink px-10 text-[12px] text-paper transition-colors hover:bg-ink/80"
           >
             Agregar al carrito
@@ -263,6 +278,8 @@ function ProductCard({ product }: { product: Product }) {
   const sizes = product.sizes ?? [];
   const [color, setColor] = useState(colors[0]?.id ?? "");
   const [size, setSize] = useState(sizes[0] ?? "");
+  const fits = product.fits ?? [];
+  const [fit, setFit] = useState(fits[0]?.id ?? "");
   const active = colors.find((c) => c.id === color);
   const models = product.models ?? [];
   const [modelId, setModelId] = useState(models[0]?.id ?? "");
@@ -314,13 +331,18 @@ function ProductCard({ product }: { product: Product }) {
         {colors.length > 1 ? (
           <ColorPicker colors={colors} value={color} onChange={setColor} name={`${product.id}-color`} />
         ) : null}
+        {fits.length ? (
+          <ChoicePicker legend={merchCopy.fit} options={fits} value={fit} onChange={setFit} name={`${product.id}-fit`} />
+        ) : null}
         {sizes.length > 1 ? (
-          <SizePicker sizes={sizes} value={size} onChange={setSize} name={`${product.id}-size`} />
+          <ChoicePicker legend="Talla" options={sizeOptions(sizes)} value={size} onChange={setSize} name={`${product.id}-size`} />
         ) : null}
         <button
           type="button"
           disabled={!product.available}
-          onClick={() => add({ kind: "product", id: product.id, model: modelId || undefined, color: color || undefined, size: size || undefined })}
+          onClick={() =>
+            add({ kind: "product", id: product.id, model: modelId || undefined, color: color || undefined, fit: fit || undefined, size: size || undefined })
+          }
           className="label mt-auto inline-flex min-h-11 items-center justify-center bg-ink text-[11px] text-paper transition-colors hover:bg-ink disabled:opacity-40"
         >
           {product.available ? "Agregar" : "Próximamente"}

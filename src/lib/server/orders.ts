@@ -20,6 +20,8 @@ export type OrderLine = {
   unitPrice: number;
   model?: string;
   color?: string;
+  /** Merch cut: "hombre" | "mujer". */
+  fit?: string;
   size?: string;
 };
 
@@ -48,9 +50,10 @@ async function insertLines(tx: TransactionSql, orderId: string, lines: OrderLine
     unit_price: l.unitPrice,
     model: l.model ?? null,
     color: l.color ?? null,
+    fit: l.fit ?? null,
     size: l.size ?? null,
   }));
-  await tx`insert into order_lines ${tx(rows, "order_id", "kind", "item_id", "quantity", "unit_price", "model", "color", "size")}`;
+  await tx`insert into order_lines ${tx(rows, "order_id", "kind", "item_id", "quantity", "unit_price", "model", "color", "fit", "size")}`;
 }
 
 async function issueTickets(tx: TransactionSql, orderId: string, holder: string | null, courtesy: boolean) {
@@ -132,6 +135,8 @@ export async function fulfillCheckoutSession(sessionId: string): Promise<{ issue
   if (!paid || !orderId) return { issuedOrderId: null, paid };
 
   const d = session.customer_details;
+  // Merch only (Stripe collects it when the cart has products): the address the order ships to.
+  const ship = session.collected_information?.shipping_details ?? null;
   const intent = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent?.id ?? null);
 
   const issued = await db().begin(async (tx) => {
@@ -143,7 +148,10 @@ export async function fulfillCheckoutSession(sessionId: string): Promise<{ issue
         customer_name = ${d?.name ?? null},
         customer_email = ${d?.email ?? null},
         customer_phone = ${d?.phone ?? null},
-        amount_total = ${session.amount_total ?? 0}
+        amount_total = ${session.amount_total ?? 0},
+        shipping = ${ship ? tx.json({ name: ship.name, address: ship.address }) : null},
+        merch_status = case when exists (select 1 from order_lines l where l.order_id = orders.id and l.kind = 'product')
+                            then 'pending' end
       where id = ${orderId} and source = 'stripe' and status <> 'paid'
       returning id`;
     if (!order) return false;

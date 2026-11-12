@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { redirect } from "next/navigation";
-import { tickets } from "@/content/trascendental";
+import { merchOrders, tickets, type MerchStatus } from "@/content/trascendental";
 import {
   endSession,
   homeFor,
@@ -16,7 +16,8 @@ import {
   requireStaff,
   startSession,
 } from "@/lib/server/admin-auth";
-import { deliverOrder, tierLabel } from "@/lib/server/notify";
+import { db } from "@/lib/server/db";
+import { confirmMerch, deliverOrder, notifyMerch, tierLabel } from "@/lib/server/notify";
 import { checkIn, createCourtesy, voidPaidOrder } from "@/lib/server/orders";
 import { clampPct, salesDisplay, saveSalesDisplay, type TierDisplay } from "@/lib/server/sales-display";
 import {
@@ -110,6 +111,41 @@ export async function voidOrder(fd: FormData) {
   if (!/^[0-9a-f-]{36}$/i.test(orderId)) return;
   await voidPaidOrder(orderId);
   revalidatePath("/admin", "layout");
+}
+
+/* ------------------------------------------------------------------ merch */
+
+const UUID = /^[0-9a-f-]{36}$/i;
+
+/** /admin/merch: fulfilment status (Por preparar → Listo → Enviado → Entregado) + tracking number. */
+export async function updateMerchOrder(fd: FormData) {
+  await requireAdmin();
+  const orderId = str(fd, "order");
+  const status = str(fd, "status") as MerchStatus;
+  const tracking = str(fd, "tracking").slice(0, 120) || null;
+  if (!UUID.test(orderId) || !(status in merchOrders.status)) return;
+  await db()`
+    update orders set merch_status = ${status}, merch_tracking = ${tracking}
+    where id = ${orderId} and merch_status is not null`;
+  revalidatePath("/admin/merch");
+}
+
+/** Sends the order's details to the merch team's WhatsApp again. */
+export async function resendMerchNotice(fd: FormData) {
+  await requireAdmin();
+  const orderId = str(fd, "order");
+  if (!UUID.test(orderId)) return;
+  await notifyMerch(orderId, { force: true });
+  revalidatePath("/admin/merch");
+}
+
+/** Sends the buyer's order confirmation (email + WhatsApp with the product photos) again. */
+export async function resendMerchConfirmation(fd: FormData) {
+  await requireAdmin();
+  const orderId = str(fd, "order");
+  if (!UUID.test(orderId)) return;
+  await confirmMerch(orderId, { force: true });
+  revalidatePath("/admin/merch");
 }
 
 /* ------------------------------------------------------ marketing display */

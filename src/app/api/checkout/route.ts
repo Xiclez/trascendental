@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import { currency, event, products, serviceFee, site, tickets } from "@/content/trascendental";
+import { currency, event, merchVariant, products, serviceFee, site, tickets } from "@/content/trascendental";
 import { withFee } from "@/lib/fees";
 import { dbConfigured } from "@/lib/server/db";
 import { SoldOutError } from "@/lib/server/inventory";
@@ -20,7 +20,7 @@ import {
  * A "Cargo por servicio" line (src/lib/fees.ts) passes Stripe's fee to the buyer.
  */
 
-type Item = { kind: "ticket" | "product"; id: string; quantity: number; model?: string; color?: string; size?: string };
+type Item = { kind: "ticket" | "product"; id: string; quantity: number; model?: string; color?: string; fit?: string; size?: string };
 
 const MAX_QTY = 10;
 
@@ -57,10 +57,13 @@ function toLineItem(item: Item): Resolved | string {
   if (product.models && !model) return `Elige el modelo de ${product.name}`;
   const color = product.colors ? product.colors.find((c) => c.id === item.color) : undefined;
   if (product.colors && !color) return `Color inválido para ${product.name}`;
-  if (product.sizes && product.sizes.length > 1 && !product.sizes.includes(item.size ?? "")) return `Talla inválida para ${product.name}`;
-  const variant = [model?.name, color?.name, item.size].filter(Boolean).join(" · ");
+  const fit = product.fits ? product.fits.find((f) => f.id === item.fit) : undefined;
+  if (product.fits && !fit) return `Elige el corte (hombre o mujer) de ${product.name}`;
+  const size = product.sizes?.includes(item.size ?? "") ? item.size : product.sizes?.length === 1 ? product.sizes[0] : undefined;
+  if (product.sizes && !size) return `Talla inválida para ${product.name}`;
+  const variant = merchVariant(product, { model: model?.id, color: color?.id, fit: fit?.id, size });
   return {
-    line: { kind: "product", id: product.id, quantity, unitPrice: product.price, model: model?.id, color: color?.id, size: item.size },
+    line: { kind: "product", id: product.id, quantity, unitPrice: product.price, model: model?.id, color: color?.id, fit: fit?.id, size },
     stripe: {
       quantity,
       price_data: {
@@ -68,7 +71,7 @@ function toLineItem(item: Item): Resolved | string {
         unit_amount: product.price * 100,
         product_data: {
           name: variant ? `${product.name} — ${variant}` : product.name,
-          metadata: { kind: "product", id: product.id, model: model?.id ?? "", color: color?.id ?? "", size: item.size ?? "" },
+          metadata: { kind: "product", id: product.id, model: model?.id ?? "", color: color?.id ?? "", fit: fit?.id ?? "", size: size ?? "" },
         },
       },
     },

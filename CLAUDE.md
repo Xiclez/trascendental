@@ -25,7 +25,7 @@ Sin Lenis ni GSAP: no hay escenas pineadas con scroll. Agregar GSAP/ScrollTrigge
 
 ```bash
 npm run dev | typecheck | lint | build
-npm run gen:tee      # regenera public/models/tee.glb (placeholder procedural, meshopt)
+npm run gen:tee      # References/tshirt.glb → public/models/tee.glb (une mallas, normaliza, simplifica, meshopt)
 npm run db:up        # Postgres local en Docker (docker-compose.dev.yml) · db:down · db:reset · db:psql
 npm run stripe:listen  # Stripe CLI en Docker → webhooks TEST a localhost:3000 (rechaza claves live)
 ```
@@ -43,7 +43,8 @@ src/app/api/boleto/[code]      JPEG del boleto = arte assets/boletos/{general,vi
 src/app/t/[code]               lo que abre el QR; con sesión de staff muestra "Registrar ingreso"
 src/app/scan/                  escáner de accesos con cámara (qr-scanner); cualquier staff (admin o escáner)
 src/app/lineup/[slug]          detalle de artista ("Ver detalles"): fotos, bio, redes
-src/app/admin/                 login, (panel)/ ventas por fase + órdenes, (panel)/cortesias, (panel)/usuarios; actions.ts = server actions
+src/app/admin/                 login, (panel)/ ventas por fase + órdenes, (panel)/merch (producción por variante + pedidos con
+                               envío, estado y guía), (panel)/cortesias, (panel)/usuarios; actions.ts = server actions
 src/lib/server/                db (pool + esquema), inventory (cupos), orders (ciclo de vida), notify (QR/EmailJS/Evolution),
                                admin-auth (cookie firmada con rol), staff (usuarios, scrypt), ticket-art (sharp), admin-data
 src/lib/fees.ts                cargo por servicio (gross-up de la comisión Stripe); lo usan carrito y checkout
@@ -61,7 +62,7 @@ src/components/
   three/scene-canvas.tsx       EL ÚNICO <Canvas> (fixed, z-0); cada región 3D es un drei <View>
   three/hero-view.tsx          shader "Horizonte IV" (field-shader.ts)
   three/tee-view.tsx           showcase de playera: GLB + Decal + PresentationControls + coreografía de color
-scripts/generate-tee.mjs       genera el GLB placeholder
+scripts/prepare-tee.mjs        prepara el GLB real (Sketchfab "Tshirt" de Tabbuso, CC BY 4.0: el crédito va en el showcase)
 ```
 
 ## Convenciones
@@ -91,6 +92,14 @@ scripts/generate-tee.mjs       genera el GLB placeholder
   Páginas/acciones del panel llaman `requireAdmin()` (el escáner es redirigido a /scan); /scan y check-in llaman `requireStaff()`.
 - Cargo por servicio: `serviceFee` en content (Stripe MX 3.6% + $3 + IVA) → `feeFor()`; una línea extra en Stripe y
   `orders.service_fee`. Los ingresos del admin son netos (order_lines).
+- Merch: variante = diseño (`models`) · color · corte (`fits`: Hombre/Mujer) · talla; `merchVariant()` la nombra en carrito,
+  Stripe, admin y WhatsApp. Cada orden pagada con merch guarda `orders.shipping` (Stripe) y `merch_status`
+  (pending → ready → shipped → delivered) y manda sus detalles por WhatsApp a `merchOrders.notifyWhatsapp`
+  (`notifyMerch`, una vez; "Reenviar aviso" en /admin/merch). Al cliente le llega la confirmación (`confirmMerch`: correo con
+  la misma plantilla EmailJS + WhatsApp) con la foto frente/espalda de cada diseño/color (`photos[color].pair`, de
+  References/merch/); va después de los boletos para no intercalar mensajes. "Reenviar confirmación" en /admin/merch.
+- Playera 3D: print placements en unidades de tee.glb (1.8 de alto, centrada); tee-view hornea la transformación del nodo
+  (cuantización meshopt). Decals a z ±DECAL_Z, material DoubleSide (tela de una capa).
 - Merch: mockups 4:5 en public/media/merch/{producto}/{color}-{front|back}.jpg (`photos` vía `mockups()`), con switch
   Frente/Espalda y `merchCopy.mockupNote`. El showcase 3D suma las vistas de foto encima del View.
 - Line-up: `lineup` en content (slug, fotos en public/media/lineup/{slug}/, bio, socials). `photo: null` = placeholder.

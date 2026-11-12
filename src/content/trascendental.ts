@@ -193,6 +193,8 @@ export type MerchColor = {
   ink: string;
 };
 
+export type MerchFit = { id: string; name: string };
+
 export type Product = {
   id: string;
   name: string;
@@ -204,30 +206,42 @@ export type Product = {
   /** Designs to choose from (like colour and size). The first one is the default. */
   models?: ProductModel[];
   colors?: MerchColor[];
+  /** Cut (Hombre / Mujer), chosen like colour and size. */
+  fits?: MerchFit[];
   sizes?: string[];
   details: string[];
   available: boolean;
 };
 
-/** A print on the 3D tee: transparent PNG + where it sits, in tee.glb geometry units (x, y = centre; scale = w, h). */
+/**
+ * A print on the 3D tee: transparent PNG + where it sits, in public/models/tee.glb units
+ * (scripts/prepare-tee.mjs: 1.8 tall, centred; x, y = centre; scale = w, h).
+ */
 export type TeePrint = { src: string; position: [number, number]; scale: [number, number] };
 
 export type ProductModel = {
   id: string;
   name: string;
   blurb: string;
-  /** Mockup photos per colour id: public/media/merch/{folder}/{color}-{front|back}.jpg (4:5). */
-  photos: Record<string, { front: string; back: string }>;
+  /**
+   * Mockup photos per colour id: public/media/merch/{folder}/{color}-{front|back}.jpg (4:5), plus
+   * {color}-pair.jpg — front and back side by side (References/merch/), sent with the order confirmation.
+   */
+  photos: Record<string, { front: string; back: string; pair: string }>;
   /**
    * Artwork per colour for the 3D showcase: public/media/merch/prints/{id}-{color}-{front|back}.png,
-   * extracted from the mockups. Placement measured on the same mockups (prints are centred: x = 0).
+   * extracted from the mockups. Placement follows the mockups, fitted to the 3D tee (prints are centred: x = 0).
    */
   prints: Record<string, { front: TeePrint; back: TeePrint }>;
 };
 
 const mockupPhotos = (folder: string, colors: MerchColor[]) =>
   Object.fromEntries(
-    colors.map((c) => [c.id, { front: `/media/merch/${folder}/${c.id}-front.jpg`, back: `/media/merch/${folder}/${c.id}-back.jpg` }]),
+    colors.map((c) => [c.id, {
+        front: `/media/merch/${folder}/${c.id}-front.jpg`,
+        back: `/media/merch/${folder}/${c.id}-back.jpg`,
+        pair: `/media/merch/${folder}/${c.id}-pair.jpg`,
+      },]),
   );
 
 type Placement = { front: [y: number, w: number, h: number]; back: [y: number, w: number, h: number] };
@@ -249,14 +263,23 @@ export const merchCopy = {
   front: "Frente",
   back: "Espalda",
   view3d: "3D",
+  fit: "Corte",
+  /** CC-BY-4.0 requires crediting the 3D model (References/tshirt.glb). */
+  modelCredit: { text: "Modelo 3D: “Tshirt” de Tabbuso, CC BY 4.0", href: "https://sketchfab.com/3d-models/tshirt-5a21282b2e454d1696547148f617d3d0" },
   /** Shown under every mockup photo. */
   mockupNote:
     "Imagen de referencia generada digitalmente. El tono de la tela y del estampado puede variar ligeramente según la pantalla.",
 };
 
 const garmentColors: MerchColor[] = [
-  { id: "blanco", name: "Blanco", fabric: "#f4f3ef", ink: "#151515" }, // default — the IV tee is white
-  { id: "negro", name: "Negro", fabric: "#1d1d21", ink: "#ebeae6" },
+  { id: "blanco", name: "Blanco", fabric: "#f6f6f3", ink: "#151515" }, // default — the IV tee is white
+  { id: "negro", name: "Negro", fabric: "#151515", ink: "#ebeae6" },
+];
+
+/** TODO — confirmar si el hoodie también tiene corte de mujer. */
+const garmentFits: MerchFit[] = [
+  { id: "hombre", name: "Hombre" },
+  { id: "mujer", name: "Mujer" },
 ];
 
 /** TODO — productos, precios y tallas son placeholders. */
@@ -276,8 +299,8 @@ export const products: Product[] = [
         blurb: "Al frente, TRASCENDENTAL IV. En la espalda, el arte del flyer: el orbe, los portales y los ojos.",
         photos: mockupPhotos("tee-portales", garmentColors),
         prints: teePrints("portales", {
-          blanco: { front: [0.451, 0.268, 0.163], back: [0.037, 0.935, 1.24] },
-          negro: { front: [0.447, 0.27, 0.164], back: [0.024, 0.917, 1.249] },
+          blanco: { front: [0.46, 0.28, 0.17], back: [0.13, 0.74, 0.981] },
+          negro: { front: [0.456, 0.282, 0.171], back: [0.12, 0.726, 0.988] },
         }),
       },
       {
@@ -286,13 +309,14 @@ export const products: Product[] = [
         blurb: "Al frente, TRASCENDENTAL. En la espalda, cinco siluetas que ascienden hacia la luz.",
         photos: mockupPhotos("tee-ascension", garmentColors),
         prints: teePrints("ascension", {
-          blanco: { front: [0.506, 0.281, 0.097], back: [0.062, 0.413, 1.48] },
-          negro: { front: [0.5, 0.285, 0.098], back: [0.063, 0.426, 1.438] },
+          blanco: { front: [0.48, 0.3, 0.104], back: [0.1, 0.33, 1.183] },
+          negro: { front: [0.475, 0.304, 0.105], back: [0.1, 0.34, 1.15] },
         }),
       },
     ],
+    fits: garmentFits,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    details: ["Corte oversize unisex", "Estampado al frente y en la espalda", "Edición limitada IV"],
+    details: ["Corte de hombre o de mujer", "Estampado al frente y en la espalda", "Edición limitada IV"],
     available: true,
   },
   {
@@ -302,6 +326,7 @@ export const products: Product[] = [
     price: 800,
     kind: "hoodie",
     colors: garmentColors.slice(0, 2),
+    fits: garmentFits,
     sizes: ["S", "M", "L", "XL"],
     details: ["Felpa 380 g", "Bordado al pecho", "Corte oversize"],
     available: true,
@@ -319,10 +344,24 @@ export const products: Product[] = [
   },
 ];
 
+export type MerchVariant = { model?: string | null; color?: string | null; fit?: string | null; size?: string | null };
+
+/** "Portales · Blanco · Mujer · M" — a merch line's variant by name (cart, Stripe, admin, WhatsApp). */
+export function merchVariant(product: Product | undefined, v: MerchVariant) {
+  return [
+    product?.models?.find((m) => m.id === v.model)?.name ?? v.model,
+    product?.colors?.find((c) => c.id === v.color)?.name ?? v.color,
+    product?.fits?.find((f) => f.id === v.fit)?.name ?? v.fit,
+    v.size,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 /** The 3D showcase. Swap `model` for a real garment GLB (Draco or meshopt). */
 export const showcase = {
   productId: "tee-iv",
-  model: "/models/tee.glb", // TODO — placeholder procedural (scripts/generate-tee.mjs)
+  model: "/models/tee.glb", // References/tshirt.glb preparado con `npm run gen:tee` (scripts/prepare-tee.mjs)
   print: "/brand/trascendental-iv-print.png", // TODO — logo oficial IV pendiente
   poster: "/images/flyer-iv.jpg",
 };
@@ -798,6 +837,64 @@ export const delivery = {
 Boleto ${i} de ${n} · ${code}
 Presenta este QR con identificación oficial.`,
 };
+
+/**
+ * Merch orders: every paid order with merch sends its details by WhatsApp to the team that makes
+ * and ships it (src/lib/server/notify.ts → notifyMerch). The admin tracks it in /admin/merch.
+ */
+export const merchOrders = {
+  /** VERIFIED — número del equipo de merch. */
+  notifyWhatsapp: "+52 1 614 199 5606",
+  status: { pending: "Por preparar", ready: "Listo", shipped: "Enviado", delivered: "Entregado" },
+  /** Confirmation to the buyer (email + WhatsApp), with the photo of each design/colour bought. */
+  confirmSubject: `Tu pedido de merch · ${event.title} ${event.edition}`,
+  confirmPreheader: (ref: string) => `Recibimos tu pedido ${ref}. Te avisamos cuando salga a envío.`,
+  confirmIntro: (ref: string) =>
+    `Recibimos tu pedido de merch oficial (orden ${ref}). Aquí está el detalle; te avisaremos cuando salga a envío.`,
+  confirmShipping: "La merch se envía a domicilio en 5–10 días hábiles.",
+  confirmWhatsapp: (o: { name: string | null; ref: string; items: string[]; total: string; address: string | null }) =>
+    [
+      `${o.name ? `Hola ${o.name.split(" ")[0]}, ` : ""}recibimos tu pedido de merch de *${event.title} ${event.edition}* ✅`,
+      `Orden ${o.ref}`,
+      "",
+      ...o.items,
+      `Total: ${o.total}`,
+      ...(o.address ? ["", "*Envío a*", o.address] : []),
+      "",
+      "La merch se envía a domicilio en 5–10 días hábiles. Te avisaremos cuando salga.",
+    ].join("\n"),
+  /** WhatsApp to the merch team. `items` and `address` arrive already formatted, one per line. */
+  message: (o: {
+    ref: string;
+    date: string;
+    name: string | null;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    items: string[];
+    total: string;
+    url: string;
+  }) =>
+    [
+      `*Nuevo pedido de merch · ${event.title} ${event.edition}*`,
+      `Orden ${o.ref} · ${o.date}`,
+      "",
+      "*Artículos*",
+      ...o.items,
+      `Total merch: ${o.total}`,
+      "",
+      "*Cliente*",
+      o.name ?? "Sin nombre",
+      ...(o.phone ? [`Tel: ${o.phone}`] : []),
+      ...(o.email ? [`Correo: ${o.email}`] : []),
+      "",
+      "*Envío*",
+      o.address ?? "Sin dirección (revisar en Stripe)",
+      "",
+      `Panel: ${o.url}`,
+    ].join("\n"),
+};
+export type MerchStatus = keyof typeof merchOrders.status;
 
 /** VERIFIED — EPK booking & links. */
 export const contact = {

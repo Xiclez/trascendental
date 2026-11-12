@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { deliverOrder } from "@/lib/server/notify";
+import { confirmMerch, deliverOrder, notifyMerch } from "@/lib/server/notify";
 import { expireSession, fulfillCheckoutSession, stripe } from "@/lib/server/orders";
 
 /**
@@ -27,7 +27,9 @@ export async function POST(request: Request) {
       case "checkout.session.async_payment_succeeded": {
         const { issuedOrderId } = await fulfillCheckoutSession(evt.data.object.id);
         // Respond to Stripe first; SMTP + WhatsApp can take several seconds.
-        if (issuedOrderId) after(() => deliverOrder(issuedOrderId));
+        // Tickets go to the buyer; merch: details to the merch team, then (after
+        // the tickets, so WhatsApp messages do not interleave) the confirmation with photos to the buyer.
+        if (issuedOrderId) after(() => Promise.all([deliverOrder(issuedOrderId).then(() => confirmMerch(issuedOrderId)), notifyMerch(issuedOrderId)]));
         break;
       }
       case "checkout.session.expired":

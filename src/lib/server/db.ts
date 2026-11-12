@@ -63,6 +63,8 @@ create table if not exists order_lines (
 );
 -- Design id for products with models (merch), e.g. 'portales'.
 alter table order_lines add column if not exists model text;
+-- Merch cut: 'hombre' | 'mujer'.
+alter table order_lines add column if not exists fit text;
 create index if not exists order_lines_order_idx on order_lines (order_id);
 create index if not exists order_lines_item_idx on order_lines (kind, item_id);
 
@@ -93,6 +95,23 @@ create table if not exists staff_users (
   last_login_at   timestamptz,
   created_at      timestamptz not null default now()
 );
+
+-- Merch (src/app/admin/(panel)/merch): shipping address from Stripe ({ name, address }), fulfilment
+-- status (null = order without merch) and the WhatsApp notice to the merch team (notify.ts → notifyMerch).
+alter table orders add column if not exists shipping jsonb;
+alter table orders add column if not exists merch_status text
+  check (merch_status in ('pending', 'ready', 'shipped', 'delivered'));
+alter table orders add column if not exists merch_tracking text;
+alter table orders add column if not exists merch_notified_at timestamptz;
+alter table orders add column if not exists merch_notify_error text;
+-- Confirmation to the buyer (email + WhatsApp with the product photos).
+alter table orders add column if not exists merch_confirmed_at timestamptz;
+alter table orders add column if not exists merch_confirm_error text;
+create index if not exists orders_merch_idx on orders (merch_status) where merch_status is not null;
+-- Paid merch orders from before the column existed.
+update orders o set merch_status = 'pending'
+where o.merch_status is null and o.status = 'paid'
+  and exists (select 1 from order_lines l where l.order_id = o.id and l.kind = 'product');
 
 -- Who let each ticket in ('admin' = master password, otherwise staff username).
 alter table tickets add column if not exists checked_in_by text;

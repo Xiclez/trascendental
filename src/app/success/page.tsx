@@ -4,7 +4,7 @@ import { after } from "next/server";
 import { ClearCart } from "@/components/clear-cart";
 import { event, formatPrice } from "@/content/trascendental";
 import { dbConfigured } from "@/lib/server/db";
-import { deliverOrder } from "@/lib/server/notify";
+import { confirmMerch, deliverOrder, notifyMerch } from "@/lib/server/notify";
 import { fulfillCheckoutSession, stripe } from "@/lib/server/orders";
 
 export const metadata: Metadata = { title: "Compra confirmada", robots: { index: false } };
@@ -31,7 +31,7 @@ export default async function SuccessPage({
   if (session && paid && dbConfigured()) {
     try {
       const { issuedOrderId } = await fulfillCheckoutSession(session.id);
-      if (issuedOrderId) after(() => deliverOrder(issuedOrderId));
+      if (issuedOrderId) after(() => Promise.all([deliverOrder(issuedOrderId).then(() => confirmMerch(issuedOrderId)), notifyMerch(issuedOrderId)]));
     } catch (err) {
       console.error("[success:fulfill]", err);
     }

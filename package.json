@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "gen:tee": "node scripts/generate-tee.mjs",
+    "gen:tee": "node scripts/prepare-tee.mjs",
     "db:up": "docker compose -f docker-compose.dev.yml up -d --wait db",
     "db:down": "docker compose -f docker-compose.dev.yml down",
     "db:reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up -d --wait db",
