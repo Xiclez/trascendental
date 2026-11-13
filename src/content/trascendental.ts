@@ -602,8 +602,11 @@ export const lineup: Artist[] = [
       { src: "/media/lineup/loops-roja/campo.jpg", alt: "Lupita Rojas con lentes neón señalando a cámara en un campo", aspect: "3/4" },
     ],
     bio: [
-      "Loop's es el proyecto de Lupita Rojas, DJ y productora de Chihuahua enfocada en el psytrance y el twilight. Desde 2025 ha tocado en las fiestas psy más activas de la ciudad, de Psy Wonderland y The Secret Circle en Epicentro Foro a Monoparty V, y ha llevado su sonido a otras plazas del país.",
-      "Como Roja explora su lado house y techno, un terreno que ya probó en vivo con su Techno Live en Creel. Sus sets combinan energía psicodélica con una presencia cercana y festiva en cabina: una de las voces femeninas que impulsan la escena psy del norte de México.",
+      // VERIFIED — semblanza oficial del evento (References/corrections/, 13.11.26).
+      "Loops no necesita presentación. Si no la conoces, es porque no has ido a suficientes fiestas de música electrónica en Chihuahua.",
+      "DJ y productora chihuahuense que se ha consolidado como uno de los talentos destacados de la escena local, llevando su música a importantes eventos dentro y fuera del estado, incluyendo Cancún.",
+      "A lo largo de su trayectoria ha compartido escenario con grandes exponentes internacionales como Mandragora y Ace Ventura, siendo la encargada de abrir sus presentaciones.",
+      "Ahora llega a Trascendental IV con su proyecto paralelo Roja, una faceta enfocada en los sonidos del house y techno, con la que explorará una nueva identidad musical.",
     ],
     highlights: [
       { label: "Dos proyectos", text: "Loop's (psytrance / twilight), su proyecto principal · Roja (house / techno), proyecto paralelo." },
@@ -611,7 +614,7 @@ export const lineup: Artist[] = [
         label: "Presentaciones",
         text: "Halloween Monoparty V · Psychedelic Experience: Girl Power · Camino a Raíces 2 · Psy Wonderland (Epicentro Foro) · The Secret Circle (Zulu, con sesión grabada para YouTube) · Yumari · Noches de Saico · Contest Atmosphere (Sheraton Soberano) · Loading Collective (Studiobar) · Techno Live como Roja (Creel).",
       },
-      { label: "Ha compartido cartel con", text: "Creative Mind, Drastiko, Unfollow, Nava Kozz, Ubezleb, Mirrno, Neoving, Tejedk, Lixx, Saget, Yul's y Ever Tapia." },
+      { label: "Ha compartido cartel con", text: "Mandragora y Ace Ventura (abriendo sus presentaciones), Creative Mind, Drastiko, Unfollow, Nava Kozz, Ubezleb, Mirrno, Neoving, Tejedk, Lixx, Saget, Yul's y Ever Tapia." },
     ],
     socials: [
       { label: "Instagram", href: "https://instagram.com/loopsroja" },
@@ -625,15 +628,17 @@ export const lineup: Artist[] = [
     role: "Talento local · B2B",
     billing: "local",
     // VERIFIED — media kit (References/artists/alexfierro/). Fotos de su Instagram: TODO pedir originales y créditos.
-    genres: "Psytech / Techno",
+    genres: "Melodic Techno / Indie Dance / Psytrance",
     photo: "/media/lineup/alex-fierro/retrato.jpg",
     photos: [
       { src: "/media/lineup/alex-fierro/cabina.jpg", alt: "Alex Fierro en la cabina frente a visuales azules", aspect: "1/1" },
       { src: "/media/lineup/alex-fierro/sudadera.jpg", alt: "Retrato de Alex Fierro con sudadera negra y capucha", aspect: "1/1" },
     ],
     bio: [
-      "DJ de psytech y techno de Chihuahua. En cabina lleva la misma energía con la que entrena: sets intensos y de buena vibra, pensados para no soltar la pista.",
-      "Ha tocado recientemente en las ediciones de Psyline Records en Epicentro y Zulu, dos de los venues clave de la escena electrónica de la ciudad. Fuera de la cabina es coach en BioGym y una cara conocida de la comunidad fitness de Chihuahua.",
+      // VERIFIED — semblanza oficial del evento (References/corrections/, 13.11.26).
+      "DJ y talento emergente de la escena electrónica chihuahuense, caracterizado por su versatilidad musical y su capacidad de explorar diferentes sonidos y estilos.",
+      "Su propuesta abarca géneros como melodic techno, indie dance y psytrance, combinando distintas influencias para crear una identidad musical dinámica.",
+      "Para esta edición de Trascendental IV, Alex Fierro llega con un set fresco, lleno de energía y una selección musical preparada especialmente para esta experiencia.",
     ],
     highlights: [{ label: "Presentaciones", text: "Psyline Records en Epicentro y en Zulu, Chihuahua (psytech / techno)." }],
     socials: [
@@ -679,20 +684,21 @@ export const lineup: Artist[] = [
   },
   {
     // VERIFIED — media kit 2026 (References/artists/maumi/). Fotos de su Instagram: TODO pedir originales y créditos.
-    // TODO — el kit marca por confirmar: nombre completo, ciudad base, año de inicio, géneros y relación con Baby Grooves.
+    // TODO — el kit marca por confirmar: nombre completo, año de inicio y relación con Baby Grooves.
     slug: "maumi",
     name: "maumi",
     b2b: "diasdeariel",
-    role: "El Paso, TX · B2B",
+    role: "Ciudad de México · B2B",
     billing: "local",
-    genres: "House · DJ y live set", // TODO confirmar géneros (sus carteles lo ubican en noches de house)
+    genres: "Tech House · DJ y live set",
     photo: "/media/lineup/maumi/retrato.jpg",
     photos: [
       { src: "/media/lineup/maumi/auto.jpg", alt: "maumi con audífonos y laptop en el asiento trasero de un auto", aspect: "3/4" },
       { src: "/media/lineup/maumi/selfie.jpg", alt: "maumi con gorra y lentes oscuros en un auto con techo panorámico", aspect: "3/4" },
     ],
     bio: [
-      "Productor musical que se presenta con dos palabras: sexy sounds. Su trabajo empieza en el estudio, entre sintetizadores, consola y Ableton, y termina en la cabina, donde presenta su música en formato DJ y live set.",
+      // VERIFIED — semblanza oficial del evento (References/corrections/maumi.txt, 13.11.26).
+      "DJ y productor mexicano radicado en Ciudad de México, reconocido por su distintivo sonido groovy y contundente dentro de la escena tech house. Su propuesta musical combina ritmos envolventes, bajos ponchados y grooves adictivos.",
       "En 2026 abrió para Tom & Collins en The Baths, en Austin, durante el fin de semana del Gran Premio de Estados Unidos de Fórmula 1. Antes, en marzo, firmó su propia noche con line-up invitado en Stanton House, El Paso.",
     ],
     highlights: [
@@ -712,8 +718,7 @@ export const lineup: Artist[] = [
     // VERIFIED — EPK https://delareiver-presskit.vercel.app/ (fotos y video del artista: References/artists/de-la-reiver/).
     slug: "de-la-reiver",
     name: "De La Reiver",
-    b2b: "moreno",
-    role: "Talento local · B2B",
+    role: "Talento local",
     billing: "local",
     genres: "Tech House / House",
     photo: "/media/lineup/de-la-reiver/retrato.jpg",
@@ -741,38 +746,6 @@ export const lineup: Artist[] = [
     socials: [
       { label: "Instagram", href: "https://www.instagram.com/de_la_reiver/" },
       { label: "SoundCloud", href: "https://soundcloud.com/suisrap1986" },
-    ],
-  },
-  {
-    // VERIFIED — media kit 2026 (References/artists/moreno/). Fotos de su Instagram: TODO pedir originales y créditos.
-    // TODO — el kit marca por confirmar: nombre completo, edad, año de inicio y lista completa de residencias.
-    slug: "moreno",
-    name: "Moreno",
-    b2b: "de-la-reiver",
-    role: "Talento local · B2B",
-    billing: "local",
-    genres: "Open Format / Bass Music",
-    photo: "/media/lineup/moreno/retrato.jpg",
-    photos: [
-      { src: "/media/lineup/moreno/red-bull.jpg", alt: "Moreno con audífonos y lentes naranjas en la cabina frente a un letrero de Red Bull", aspect: "3/4" },
-      { src: "/media/lineup/moreno/mirador.jpg", alt: "Moreno recargado en un poste en un mirador sobre la ciudad de Chihuahua", aspect: "3/4" },
-    ],
-    bio: [
-      "Moreno, también conocido como Moreno MX, es un DJ de Chihuahua. Empezó a los 15 años en fiestas, bares y antros de la ciudad, y en su primer año de residencias ya sumaba más de cinco venues, entre ellos Dembow CUU y Back Room.",
-      "Su set cruza dos mundos: el formato abierto que llena la pista (reggaetón, trap latino y el pop que todos corean) y una vena de bass music (dubstep, riddim, brostep) que lo ha puesto en los line-ups electrónicos del Outdoor Stage de Zulu, en fechas producidas junto a Psyline Records y Loading Collective.",
-    ],
-    highlights: [
-      { label: "Dos sets", text: "Club / open format: reggaetón, trap latino, perreo, pop y throwbacks · Rave / bass: dubstep, riddim y brostep." },
-      {
-        label: "Presentaciones",
-        text: "Pop Up Rave · Viva La Dance (19.09.26) · CODE:08, Zulu Outdoor Stage (14.08.26, slot principal) · Sabina Palma: Øverride, Zulu Outdoor Stage (06.06.26, Psyline Records × Loading Collective) · Una Noche en Familia, Zulu Cocktail & Lounge (07.11.25).",
-      },
-      { label: "Venues y plazas", text: "Zulu · Level · Normal CUU · Dembow CUU · Back Room · R14 Club · Opal Night · Crypto TRC · Puerto Vallarta." },
-    ],
-    socials: [
-      { label: "Instagram", href: "https://instagram.com/morenomxdj" },
-      { label: "TikTok", href: "https://www.tiktok.com/@morenomxdj" },
-      { label: "SoundCloud", href: "https://soundcloud.com/morenomxdj" },
     ],
   },
 ];
