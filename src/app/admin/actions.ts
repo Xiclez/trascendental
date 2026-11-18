@@ -104,6 +104,47 @@ export async function resend(fd: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+/**
+ * Fixes a buyer's mistyped email / WhatsApp. A changed channel loses its delivery state (it never
+ * reached the new address) and, with "resend" checked, gets the tickets again.
+ */
+export async function updateContact(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const orderId = str(fd, "order");
+  const email = str(fd, "email").toLowerCase() || null;
+  const phone = str(fd, "phone").replace(/[^\d+]/g, "") || null;
+  if (!UUID.test(orderId)) return { error: "Orden inválida." };
+  if (!email && !phone) return { error: "Deja al menos correo o WhatsApp." };
+  if (email && !EMAIL.test(email)) return { error: "Correo inválido." };
+  if (phone && phone.replace(/\D/g, "").length < 10) return { error: "WhatsApp inválido (10 dígitos o con lada +52)." };
+
+  const sql = db();
+  const [order] = await sql<{ status: string; customer_email: string | null; customer_phone: string | null }[]>`
+    select status, customer_email, customer_phone from orders where id = ${orderId}`;
+  if (!order) return { error: "Orden no encontrada." };
+  const emailChanged = email !== order.customer_email;
+  const phoneChanged = phone !== order.customer_phone;
+  if (!emailChanged && !phoneChanged) return { error: "Sin cambios." };
+
+  await sql`
+    update orders set
+      customer_email = ${email},
+      customer_phone = ${phone},
+      email_sent_at = ${emailChanged ? null : sql`email_sent_at`},
+      email_error = ${emailChanged ? null : sql`email_error`},
+      whatsapp_sent_at = ${phoneChanged ? null : sql`whatsapp_sent_at`},
+      whatsapp_error = ${phoneChanged ? null : sql`whatsapp_error`}
+    where id = ${orderId}`;
+  console.info("[admin:contact]", orderId, { from: [order.customer_email, order.customer_phone], to: [email, phone] });
+
+  const resendNow = fd.get("resend") === "on" && order.status === "paid";
+  if (resendNow) {
+    after(() => deliverOrder(orderId, { force: true, email: emailChanged, whatsapp: phoneChanged }));
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: resendNow ? "Contacto actualizado. Reenviando boletos…" : "Contacto actualizado." };
+}
+
 /** Voids a paid order: its tickets stop working at the door and its stock is released. */
 export async function voidOrder(fd: FormData) {
   await requireAdmin();

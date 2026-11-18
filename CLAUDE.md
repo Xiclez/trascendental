@@ -87,7 +87,8 @@ scripts/prepare-tee.mjs        prepara el GLB real (Sketchfab "Tshirt" de Tabbus
   `soldPct` fijo por fase (0–99, vacío = real) y "Agotada" cierra la fase DE VERDAD (abre la siguiente; también en
   `assertStock`). Inactivo = stats reales. Un agotado real siempre gana. Las cifras del admin siempre son reales.
 - Boletos: se emiten SOLO en `fulfillCheckoutSession` (idempotente; webhook + success). Un QR por boleto → `/t/{code}`.
-  Entrega por canal con `*_sent_at` / `*_error` en `orders`; el admin puede "Reenviar".
+  Entrega por canal con `*_sent_at` / `*_error` en `orders`; el admin puede "Reenviar" y "Editar contacto"
+  (`updateContact`: corrige correo/WhatsApp, limpia el estado de entrega del canal cambiado y reenvía solo a ese canal).
 - Staff: admin maestro = usuario `admin` + `ADMIN_PASSWORD`; demás cuentas en `staff_users` (rol `admin` o `scanner`).
   Páginas/acciones del panel llaman `requireAdmin()` (el escáner es redirigido a /scan); /scan y check-in llaman `requireStaff()`.
 - Cargo por servicio: `serviceFee` en content (Stripe MX 3.6% + $3 + IVA) → `feeFor()`; una línea extra en Stripe y

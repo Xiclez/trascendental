@@ -9,6 +9,7 @@ import {
   resetStaffPassword,
   saveSalesDisplayTiers,
   toggleSalesDisplay,
+  updateContact,
   type FormState,
 } from "@/app/admin/actions";
 import { btn, field } from "@/app/admin/styles";
@@ -93,6 +94,32 @@ export function CourtesyForm({ tiers }: { tiers: { id: string; label: string }[]
         </button>
         <Message state={state} />
       </div>
+    </form>
+  );
+}
+
+/** Orders table: fix a buyer's mistyped email / WhatsApp (and resend the tickets there). */
+export function ContactForm({ order, email, phone }: { order: string; email: string | null; phone: string | null }) {
+  const [state, action, pending] = useActionState(updateContact, null);
+  return (
+    <form action={action} className="grid gap-3">
+      <input type="hidden" name="order" value={order} />
+      <label className="label text-[9px] text-graphite">
+        Correo
+        <input name="email" type="email" maxLength={160} defaultValue={email ?? ""} className={field} />
+      </label>
+      <label className="label text-[9px] text-graphite">
+        WhatsApp
+        <input name="phone" type="tel" maxLength={20} defaultValue={phone ?? ""} className={field} placeholder="+52 614 000 0000" />
+      </label>
+      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-xs text-graphite">
+        <input type="checkbox" name="resend" defaultChecked className="size-5 accent-[var(--color-ink)]" />
+        Reenviar boletos a los datos nuevos
+      </label>
+      <button type="submit" disabled={pending} className="label min-h-11 w-full bg-ink px-2 text-[10px] text-paper hover:bg-ink/80 disabled:opacity-40">
+        {pending ? "Guardando…" : "Guardar contacto"}
+      </button>
+      {state ? <p className="text-xs text-ink" aria-live="polite">{state.error ?? state.ok}</p> : null}
     </form>
   );
 }

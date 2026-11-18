@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { resend, voidOrder } from "@/app/admin/actions";
+import { ContactForm } from "@/app/admin/forms";
 import { formatPrice, merchVariant, products, tickets } from "@/content/trascendental";
 import type { AdminOrder } from "@/lib/server/admin-data";
 
@@ -81,6 +82,16 @@ export function OrdersTable({ orders, empty }: { orders: AdminOrder[]; empty: st
                 <span className="text-ink">{o.customer_name ?? "—"}</span>
                 {o.source === "courtesy" ? <span className="label ml-2 border border-rule px-1 text-[9px]">Cortesía</span> : null}
                 {o.note ? <p className="mt-1 text-xs text-graphite">{o.note}</p> : null}
+                {o.status === "paid" ? (
+                  <details className="mt-2 text-xs">
+                    <summary className="label inline-flex min-h-8 cursor-pointer list-none items-center border border-rule px-2 text-[9px] text-graphite hover:border-ink hover:text-ink">
+                      Editar contacto
+                    </summary>
+                    <div className="mt-2 w-64 border border-rule bg-paper p-3">
+                      <ContactForm order={o.id} email={o.customer_email} phone={o.customer_phone} />
+                    </div>
+                  </details>
+                ) : null}
               </td>
               <td className="p-3">
                 <ul className="space-y-0.5">
